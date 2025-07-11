@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { Loader2, Stadium } from 'lucide-react'
+import { Loader2, Radius as Stadium } from 'lucide-react'
 
 export function LoadingScreen() {
   return (
