@@ -28,7 +28,7 @@ const config = createConfig({
     new WalletConnectConnector({
       chains,
       options: {
-        projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
+        projectId: '3a8170812b534d0ff9d794f19a901d64', // Public demo project ID
       },
     }),
   ],
