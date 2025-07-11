@@ -6,8 +6,8 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "FanVerse - Transform Your Couch Into Stadium Seats",
-  description: "Watch, Feel, Share with Your Crew in immersive 3D stadium experience",
+  title: "ChilizDApp - Web3 Sports Platform",
+  description: "The ultimate decentralized sports platform powered by Chiliz",
     generator: 'v0.dev'
 }
 
