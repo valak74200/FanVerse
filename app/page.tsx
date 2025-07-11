@@ -1,103 +1,156 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { AnimatedBackground } from "@/components/animated-background"
+import { Navigation } from "@/components/navigation"
+import { DashboardHeader } from "@/components/dashboard-header"
+import { DashboardStats } from "@/components/dashboard-stats"
+import { PortfolioChart } from "@/components/portfolio-chart"
+import { QuickActions } from "@/components/quick-actions"
+import { RecentActivity } from "@/components/recent-activity"
 
-export default function LandingPage() {
-  const router = useRouter()
-  const [particles, setParticles] = useState<
-    Array<{ id: number; x: number; y: number; size: number; opacity: number }>
-  >([])
+export default function Home() {
+  const [activeSection, setActiveSection] = useState("dashboard")
 
-  useEffect(() => {
-    // Generate floating particles
-    const newParticles = Array.from({ length: 50 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 4 + 1,
-      opacity: Math.random() * 0.6 + 0.2,
-    }))
-    setParticles(newParticles)
-
-    // Animate particles
-    const interval = setInterval(() => {
-      setParticles((prev) =>
-        prev.map((particle) => ({
-          ...particle,
-          y: particle.y > 100 ? -5 : particle.y + 0.1,
-          opacity: Math.sin(Date.now() * 0.001 + particle.id) * 0.3 + 0.5,
-        })),
-      )
-    }, 50)
-
-    return () => clearInterval(interval)
-  }, [])
+  const renderContent = () => {
+    switch (activeSection) {
+      case "dashboard":
+        return (
+          <motion.div
+            key="dashboard"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            <DashboardStats />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <PortfolioChart />
+              <RecentActivity />
+            </div>
+            <QuickActions />
+          </motion.div>
+        )
+      case "wallet":
+        return (
+          <motion.div
+            key="wallet"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="text-center py-20"
+          >
+            <h2 className="text-3xl font-bold text-white mb-4">Wallet Section</h2>
+            <p className="text-gray-400">Wallet functionality coming soon...</p>
+          </motion.div>
+        )
+      case "staking":
+        return (
+          <motion.div
+            key="staking"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="text-center py-20"
+          >
+            <h2 className="text-3xl font-bold text-white mb-4">Staking Section</h2>
+            <p className="text-gray-400">Staking functionality coming soon...</p>
+          </motion.div>
+        )
+      case "marketplace":
+        return (
+          <motion.div
+            key="marketplace"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="text-center py-20"
+          >
+            <h2 className="text-3xl font-bold text-white mb-4">Marketplace Section</h2>
+            <p className="text-gray-400">Marketplace functionality coming soon...</p>
+          </motion.div>
+        )
+      case "community":
+        return (
+          <motion.div
+            key="community"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="text-center py-20"
+          >
+            <h2 className="text-3xl font-bold text-white mb-4">Community Section</h2>
+            <p className="text-gray-400">Community functionality coming soon...</p>
+          </motion.div>
+        )
+      case "analytics":
+        return (
+          <motion.div
+            key="analytics"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="text-center py-20"
+          >
+            <h2 className="text-3xl font-bold text-white mb-4">Analytics Section</h2>
+            <p className="text-gray-400">Analytics functionality coming soon...</p>
+          </motion.div>
+        )
+      case "rewards":
+        return (
+          <motion.div
+            key="rewards"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="text-center py-20"
+          >
+            <h2 className="text-3xl font-bold text-white mb-4">Rewards Section</h2>
+            <p className="text-gray-400">Rewards functionality coming soon...</p>
+          </motion.div>
+        )
+      case "settings":
+        return (
+          <motion.div
+            key="settings"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="text-center py-20"
+          >
+            <h2 className="text-3xl font-bold text-white mb-4">Settings Section</h2>
+            <p className="text-gray-400">Settings functionality coming soon...</p>
+          </motion.div>
+        )
+      default:
+        return null
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Animated Particles Background */}
-      <div className="absolute inset-0">
-        {particles.map((particle) => (
-          <div
-            key={particle.id}
-            className="absolute w-1 h-1 bg-blue-400 rounded-full animate-pulse"
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-              width: `${particle.size}px`,
-              height: `${particle.size}px`,
-              opacity: particle.opacity,
-              boxShadow: `0 0 ${particle.size * 2}px rgba(59, 130, 246, 0.5)`,
-            }}
-          />
-        ))}
-      </div>
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      <AnimatedBackground />
 
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+      <div className="relative z-10">
+        <Navigation activeSection={activeSection} onSectionChange={setActiveSection} />
 
-      {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 text-center">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Logo */}
-          <div className="mb-8">
-            <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-blue-600 bg-clip-text text-transparent">
-              FanVerse
-            </h1>
-          </div>
+        <div className="lg:ml-64">
+          <DashboardHeader />
 
-          {/* Main Title */}
-          <h2 className="text-4xl md:text-6xl font-bold text-white leading-tight">
-            Transform Your Couch Into{" "}
-            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Stadium Seats
-            </span>
-          </h2>
-
-          {/* Subtitle */}
-          <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto">Watch, Feel, Share with Your Crew</p>
-
-          {/* CTA Button */}
-          <div className="pt-8">
-            <Button
-              onClick={() => router.push("/tribune")}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-12 py-6 text-xl font-semibold rounded-full shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
-            >
-              Join Tribune
-            </Button>
-          </div>
-
-          {/* Floating Elements */}
-          <div className="absolute top-20 left-10 w-20 h-20 bg-blue-500/20 rounded-full blur-xl animate-pulse" />
-          <div className="absolute bottom-20 right-10 w-32 h-32 bg-purple-500/20 rounded-full blur-xl animate-pulse delay-1000" />
-          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-cyan-500/20 rounded-full blur-xl animate-pulse delay-500" />
+          <main className="p-6">
+            <AnimatePresence mode="wait">{renderContent()}</AnimatePresence>
+          </main>
         </div>
       </div>
-
-      {/* Bottom Gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent" />
     </div>
   )
 }

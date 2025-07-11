@@ -23,11 +23,6 @@
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 240 10% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
 
@@ -51,11 +46,6 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
   }
 }
 
@@ -68,60 +58,108 @@
   }
 }
 
-/* Custom scrollbar for dark theme */
+/* Custom Chiliz Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1a1a;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #404040;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #606060;
-}
-
-/* Hexagon clip path utility */
-.clip-path-hexagon {
-  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-}
-
-/* Glassmorphism effect */
-.glass {
-  background: rgba(26, 26, 26, 0.8);
-  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, #ff0000, #dc2626);
+  border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Particle animation */
-@keyframes float {
-  0%,
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+/* Chiliz Glow Effects */
+.chiliz-glow {
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+}
+
+.chiliz-glow-strong {
+  box-shadow: 0 0 40px rgba(255, 0, 0, 0.6);
+}
+
+.chiliz-text-glow {
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+/* Glass Morphism Effects */
+.glass-chiliz {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(220, 38, 38, 0.05));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Gradient Animations */
+.gradient-animate {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(255, 0, 0, 0.2);
+}
+
+/* Loading States */
+.loading-shimmer {
+  background: linear-gradient(90deg, rgba(255, 0, 0, 0.1) 0%, rgba(255, 0, 0, 0.3) 50%, rgba(255, 0, 0, 0.1) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
   100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
+    background-position: 200% 0;
   }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+/* Responsive Design */
+@media (max-width: 768px) {
+  .glass-chiliz {
+    backdrop-filter: blur(10px);
+  }
 }
 
-/* Glow effects */
-.glow-blue {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-glow,
+  .animate-pulse-slow,
+  .animate-bounce-slow,
+  .animate-spin-slow,
+  .gradient-animate {
+    animation: none;
+  }
 }
 
-.glow-purple {
-  box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
-}
-
-.glow-green {
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+/* Focus States */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(255, 0, 0, 0.8);
+  outline-offset: 2px;
 }
