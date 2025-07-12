@@ -12,7 +12,6 @@ import * as THREE from "three"
 // Composant pour le modèle 3D du stade
 function StadeModel() {
   const groupRef = useRef<THREE.Group>(null)
-  const { scene } = useGLTF("/Stade.glb")
   
   // Animation de rotation douce
   useFrame((state) => {
@@ -21,9 +20,56 @@ function StadeModel() {
     }
   })
 
+  // Stade temporaire avec des formes géométriques simples
   return (
     <group ref={groupRef}>
-      <primitive object={scene} scale={[1, 1, 1]} />
+      {/* Terrain de football */}
+      <mesh position={[0, 0, 0]}>
+        <planeGeometry args={[20, 12]} />
+        <meshStandardMaterial color="#2d5a2d" />
+      </mesh>
+      
+      {/* Tribunes */}
+      <mesh position={[0, 2, -8]}>
+        <boxGeometry args={[25, 4, 2]} />
+        <meshStandardMaterial color="#666666" />
+      </mesh>
+      <mesh position={[0, 2, 8]}>
+        <boxGeometry args={[25, 4, 2]} />
+        <meshStandardMaterial color="#666666" />
+      </mesh>
+      <mesh position={[-12, 2, 0]}>
+        <boxGeometry args={[2, 4, 16]} />
+        <meshStandardMaterial color="#666666" />
+      </mesh>
+      <mesh position={[12, 2, 0]}>
+        <boxGeometry args={[2, 4, 16]} />
+        <meshStandardMaterial color="#666666" />
+      </mesh>
+      
+      {/* Projecteurs */}
+      <mesh position={[-10, 8, -6]}>
+        <cylinderGeometry args={[0.5, 0.5, 1]} />
+        <meshStandardMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[10, 8, -6]}>
+        <cylinderGeometry args={[0.5, 0.5, 1]} />
+        <meshStandardMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[-10, 8, 6]}>
+        <cylinderGeometry args={[0.5, 0.5, 1]} />
+        <meshStandardMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[10, 8, 6]}>
+        <cylinderGeometry args={[0.5, 0.5, 1]} />
+        <meshStandardMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
+      </mesh>
+      
+      {/* Lignes du terrain */}
+      <mesh position={[0, 0.01, 0]}>
+        <ringGeometry args={[2, 2.1, 32]} />
+        <meshStandardMaterial color="#ffffff" />
+      </mesh>
     </group>
   )
 }
@@ -154,5 +200,5 @@ export default function StadeViewer3D({
   )
 }
 
-// Préchargement du modèle
-useGLTF.preload("/Stade.glb") 
+// Stade temporaire créé avec des géométries Three.js
+// Remplacez par votre fichier GLB quand vous en aurez un optimisé 
