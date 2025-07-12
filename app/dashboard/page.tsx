@@ -13,6 +13,7 @@ import { NFTMoments } from "@/components/nft-moments"
 import { NFTMarketplace } from "@/components/nft-marketplace"
 import { NFTCollection } from "@/components/nft-collection"
 import { EmotionPanel } from "@/components/stadium/EmotionPanel"
+import { AdvancedChat } from "@/components/advanced-chat"
 import dynamic from "next/dynamic"
 import { 
   Users, 
@@ -194,14 +195,33 @@ export default function Dashboard() {
       case "stadium":
         return (
           <div className="space-y-6">
-            <Card className="bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20 overflow-hidden">
-              <div className="h-[600px]">
-                <VirtualStadium className="w-full h-full" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-2 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20 overflow-hidden">
+                <div className="h-[600px]">
+                  <VirtualStadium className="w-full h-full" />
+                </div>
+              </Card>
+              
+              <div className="space-y-6">
+                <Card className="h-[400px] p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-primary to-warning bg-clip-text text-transparent">
+                      Chat en direct
+                    </h3>
+                    <Badge className="bg-success/20 text-success border-success/30">
+                      {liveStats.activeUsers} en ligne
+                    </Badge>
+                  </div>
+                  <div className="h-[320px]">
+                    <AdvancedChat chatType="general" />
+                  </div>
+                </Card>
+                
+                <Card className="p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20">
+                  <EmotionPanel />
+                </Card>
               </div>
-            </Card>
-            <Card className="p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20">
-              <EmotionPanel />
-            </Card>
+            </div>
           </div>
         )
       case "social":
@@ -236,13 +256,19 @@ export default function Dashboard() {
       case "nft-marketplace":
         return <NFTMarketplace />
       case "nft-collection":
-        return <NFTCollection />
+        return (
+          <Card className="p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20">
+            <NFTCollection />
+          </Card>
+        )
       case "nft-moments":
         return (
-          <NFTMoments
-            onMomentCapture={(moment) => console.log('Moment captured:', moment)}
-            matchEvents={matchEvents}
-          />
+          <Card className="p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20">
+            <NFTMoments
+              onMomentCapture={(moment) => console.log('Moment captured:', moment)}
+              matchEvents={matchEvents}
+            />
+          </Card>
         )
       case "staking":
         return (
