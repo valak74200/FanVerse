@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { FuturisticButton } from "@/components/ui/FuturisticButton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Send, Mic, MicOff, Volume2, Smile, ImageIcon, Crown, MessageCircle, Settings } from "lucide-react"
 
 interface ChatMessage {
