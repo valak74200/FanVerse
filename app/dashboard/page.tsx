@@ -2,8 +2,6 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Provider } from "react-redux"
-import { store } from "@/store"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -82,7 +80,6 @@ export default function Dashboard() {
   ]
 
   return (
-    <Provider store={store}>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-primary/20">
@@ -422,7 +419,6 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </Provider>
     </div>
   )
 }

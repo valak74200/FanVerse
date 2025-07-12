@@ -1,8 +1,6 @@
 "use client"
 
 import { useEffect } from 'react'
-import { Provider } from 'react-redux'
-import { store } from '@/store'
 import dynamic from 'next/dynamic'
 import { EmotionPanel } from '@/components/stadium/EmotionPanel'
 import { StadiumControls } from '@/components/stadium/StadiumControls'
@@ -214,8 +212,6 @@ function StadiumContent() {
 // Main page component with Redux Provider
 export default function StadiumPage() {
   return (
-    <Provider store={store}>
-      <StadiumContent />
-    </Provider>
+    <StadiumContent />
   )
 }

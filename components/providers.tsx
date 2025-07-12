@@ -4,6 +4,8 @@ import { ReactNode } from 'react'
 import { WagmiProvider, createConfig, http } from 'wagmi'
 import { mainnet, polygon, arbitrum } from 'wagmi/chains'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Provider } from 'react-redux'
+import { store } from '@/store'
 import { WalletProvider } from '@/components/web3/WalletProvider'
 
 // Create a query client
@@ -27,9 +29,11 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={config}>
-        <WalletProvider>
-          {children}
-        </WalletProvider>
+        <Provider store={store}>
+          <WalletProvider>
+            {children}
+          </WalletProvider>
+        </Provider>
       </WagmiProvider>
     </QueryClientProvider>
   )
