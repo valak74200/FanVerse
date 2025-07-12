@@ -47,17 +47,25 @@
                 <h2>Bienvenue, <span id="displayUserId"></span></h2>
                 <p>Solde CHZ : <span id="chzBalance">0</span></p>
             </div>
+            
+            <!-- ======================================================= -->
+            <!-- SECTION ÉMOTIONS MISE À JOUR                          -->
+            <!-- ======================================================= -->
             <div id="emotion-section" style="display: none;">
                 <h2>Émotions</h2>
-                <button class="emotion-button" data-emotion="rage">Rage 😡</button>
-                <button class="emotion-button" data-emotion="shock">Choc 😲</button>
-                <button class="emotion-button" data-emotion="love">Amour 🥰</button>
-                <button class="emotion-button" data-emotion="hype">Hype 🎉</button>
+                <button class="emotion-button" data-emotion="anger">Colère 😡</button>
+                <button class="emotion-button" data-emotion="surprise">Surprise 😮</button>
+                <button class="emotion-button" data-emotion="joy">Joie 😂</button>
+                <button class="emotion-button" data-emotion="hype">Hype 🔥</button>
+                <button class="emotion-button" data-emotion="fear">Peur 😨</button>
+                <button class="emotion-button" data-emotion="sadness">Tristesse 😢</button>
                 <div>
-                    <p>Rage : <span id="rageCount">0</span></p>
-                    <p>Choc : <span id="shockCount">0</span></p>
-                    <p>Amour : <span id="loveCount">0</span></p>
+                    <p>Colère : <span id="angerCount">0</span></p>
+                    <p>Surprise : <span id="surpriseCount">0</span></p>
+                    <p>Joie : <span id="joyCount">0</span></p>
                     <p>Hype : <span id="hypeCount">0</span></p>
+                    <p>Peur : <span id="fearCount">0</span></p>
+                    <p>Tristesse : <span id="sadnessCount">0</span></p>
                 </div>
             </div>
         </div>
@@ -155,15 +163,21 @@
                 socket.emit('send_emotion', { emotionType: button.dataset.emotion });
             });
         });
+
+        // =======================================================
+        // GESTIONNAIRE D'ÉVÉNEMENT MIS À JOUR
+        // =======================================================
         socket.on('emotion_update', (data) => {
-            document.getElementById('rageCount').textContent = data.rage;
-            document.getElementById('shockCount').textContent = data.shock;
-            document.getElementById('loveCount').textContent = data.love;
-            document.getElementById('hypeCount').textContent = data.hype;
+            document.getElementById('angerCount').textContent = data.anger || 0;
+            document.getElementById('surpriseCount').textContent = data.surprise || 0;
+            document.getElementById('joyCount').textContent = data.joy || 0;
+            document.getElementById('hypeCount').textContent = data.hype || 0;
+            document.getElementById('fearCount').textContent = data.fear || 0;
+            document.getElementById('sadnessCount').textContent = data.sadness || 0;
         });
 
         // =======================================================
-        // SECTION PARIS (CLIENT) - ENTIÈREMENT CORRIGÉE
+        // SECTION PARIS (CLIENT) - INCHANGÉE
         // =======================================================
         socket.on('new_bet', (bet) => {
             betQuestion.textContent = bet.question;
@@ -208,9 +222,7 @@
         socket.on('bet_accepted', (data) => {
             betInfo.style.color = 'green';
             betInfo.textContent = data.message;
-            // --- CORRECTION : Mettre à jour le solde immédiatement ---
             chzBalance.textContent = data.newBalance.toFixed(2);
-            // Bloquer les paris une fois qu'un pari a été accepté
             betOptionsContainer.innerHTML = '<p><i>Pari enregistré. Bonne chance !</i></p>';
             betAmountInput.disabled = true;
         });
@@ -226,26 +238,19 @@
             betInfo.style.color = '#333';
             betInfo.textContent = data.message;
             betAmountInput.disabled = true;
-            // Nettoyer les boutons si l'utilisateur n'a pas déjà parié
             if (!betOptionsContainer.querySelector('p')) {
                 betOptionsContainer.innerHTML = '';
             }
         });
 
-        // --- CORRECTION : Ajout du handler manquant pour les résultats ---
         socket.on('bet_result', (data) => {
-            // Mettre à jour le message avec le résultat
             if (data.winnings > 0) {
-                betInfo.style.color = 'green'; // Victoire
+                betInfo.style.color = 'green';
             } else {
-                betInfo.style.color = '#E85B0C'; // Défaite (orange pour être moins agressif que le rouge)
+                betInfo.style.color = '#E85B0C';
             }
             betInfo.textContent = data.message;
-
-            // Mettre à jour le solde final
             chzBalance.textContent = data.newBalance.toFixed(2);
-            
-            // Nettoyer la question et les options pour le prochain tour
             betQuestion.textContent = `L'option gagnante était : ${data.winningOption}`;
             betOptionsContainer.innerHTML = '<p><i>Prochain pari dans quelques instants...</i></p>';
         });
