@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chiliz Fan Engagement</title>
+    <title>FanVerse - Client Intégré Blockchain</title>
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; color: #333; }
         #app-container { display: flex; width: 95%; max-width: 1400px; background-color: #fff; box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); border-radius: 8px; overflow: hidden; margin-top: 20px; flex-wrap: wrap; }
@@ -31,6 +32,53 @@
         .result.success { background-color: #e9f7ef; color: #28a745; }
         .result.failed { background-color: #fdeded; color: #dc3545; }
         #bet-info { font-weight: bold; }
+        
+        /* Nouveaux styles blockchain */
+        .blockchain-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .blockchain-section h3 { color: white; border-bottom: 2px solid rgba(255,255,255,0.3); }
+        .wallet-info { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 0.9em; }
+        .balance-display { font-size: 1.2em; font-weight: bold; margin: 10px 0; }
+        .blockchain-status { padding: 5px 10px; border-radius: 15px; font-size: 0.8em; margin: 5px 0; display: inline-block; }
+        .blockchain-status.connected { background: #28a745; color: white; }
+        .blockchain-status.disconnected { background: #dc3545; color: white; }
+        .bet-mode { margin: 10px 0; }
+        .bet-mode label { display: block; margin: 5px 0; cursor: pointer; }
+        .bet-type-blockchain { background: linear-gradient(45deg, #667eea, #764ba2); }
+        .bet-type-backend { background: #6c757d; }
+        .nft-card { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; margin: 5px 0; font-size: 0.9em; }
+        
+        /* Styles pour les options de pari blockchain */
+        .blockchain-bet-option { 
+            background: linear-gradient(45deg, #667eea, #764ba2); 
+            margin: 5px; 
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .blockchain-bet-option:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .blockchain-bet-option.selected {
+            border-color: #ff6b35;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+        }
+        .blockchain-options-container {
+            display: none;
+            margin: 10px 0;
+        }
+        .blockchain-amount-input {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            width: 100%;
+        }
+        .blockchain-amount-input::placeholder { color: rgba(255,255,255,0.7); }
     </style>
 </head>
 <body>
@@ -43,14 +91,41 @@
                 <button id="loginButton">Se connecter</button>
                 <p id="loginMessage" style="color: red;"></p>
             </div>
+            
             <div id="user-info" style="display: none;">
                 <h2>Bienvenue, <span id="displayUserId"></span></h2>
-                <p>Solde CHZ : <span id="chzBalance">0</span></p>
+                <p>Solde Backend : <span id="chzBalance">0</span> CHZ</p>
             </div>
             
-            <!-- ======================================================= -->
-            <!-- SECTION ÉMOTIONS MISE À JOUR                          -->
-            <!-- ======================================================= -->
+            <!-- ✨ SECTION BLOCKCHAIN AMÉLIORÉE -->
+            <div id="blockchain-section" class="blockchain-section" style="display: none;">
+                <h3>🔗 Wallet Blockchain</h3>
+                
+                <div class="blockchain-status disconnected" id="blockchain-status">
+                    ⛓️ Blockchain déconnectée
+                </div>
+                
+                <div id="wallet-connection" style="display: block;">
+                    <button id="connect-wallet-btn" style="background: linear-gradient(45deg, #ff6b35, #f7931e);">
+                        Connecter MetaMask
+                    </button>
+                </div>
+                
+                <div id="wallet-info" style="display: none;">
+                    <div class="wallet-info">
+                        <strong>Adresse:</strong><br>
+                        <span id="wallet-address" style="font-family: monospace; font-size: 0.8em;"></span>
+                    </div>
+                    <div class="balance-display">
+                        💰 <span id="wallet-balance">0</span> CHZ
+                    </div>
+                    <button id="disconnect-wallet-btn" style="background: #dc3545; font-size: 0.8em;">
+                        Déconnecter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Section émotions existante -->
             <div id="emotion-section" style="display: none;">
                 <h2>Émotions</h2>
                 <button class="emotion-button" data-emotion="anger">Colère 😡</button>
@@ -74,11 +149,44 @@
         <div id="center-panel">
             <div id="bet-section" style="display: none;">
                 <h2>Paris <span id="bet-timer" style="color: #dc3545; margin-left: 15px;"></span></h2>
+                
+                <!-- ✨ MODE DE PARI AMÉLIORÉ -->
+                <div class="bet-mode">
+                    <label><input type="radio" name="bet-mode" value="backend" checked> 💻 Pari Backend (solde interne)</label>
+                    <label><input type="radio" name="bet-mode" value="blockchain" id="blockchain-mode" disabled> ⛓️ Pari Blockchain (MetaMask + CHZ réels)</label>
+                </div>
+                
                 <p id="bet-question">Aucun pari en cours.</p>
-                <div id="bet-options"></div>
-                <input type="number" id="bet-amount" placeholder="Montant à parier (CHZ)">
+                
+                <!-- Options du pari backend (existant) -->
+                <div id="backend-bet-container">
+                    <div id="bet-options"></div>
+                    <input type="number" id="bet-amount" placeholder="Montant à parier (CHZ)">
+                </div>
+                
+                <!-- ✨ NOUVELLES OPTIONS BLOCKCHAIN -->
+                <div id="blockchain-bet-container" class="blockchain-section" style="display: none;">
+                    <h4 style="color: white; margin: 10px 0;">🎲 Pariez avec vos CHZ via MetaMask</h4>
+                    
+                    <!-- Options de pari blockchain -->
+                    <div id="blockchain-bet-options" class="blockchain-options-container"></div>
+                    
+                    <!-- Montant du pari blockchain -->
+                    <input type="number" id="blockchain-bet-amount" class="blockchain-amount-input" 
+                           placeholder="Montant en CHZ (ex: 0.1)" step="0.01" min="0.01">
+                    
+                    <!-- Bouton de pari -->
+                    <button id="place-blockchain-bet-btn" class="bet-type-blockchain" disabled style="width: 100%;">
+                        🚀 Placer le pari blockchain
+                    </button>
+                    
+                    <!-- Statut du pari -->
+                    <div id="blockchain-bet-status" style="margin-top: 10px; font-size: 0.9em;"></div>
+                </div>
+                
                 <p id="bet-info"></p>
             </div>
+            
             <div id="chat-section" style="display: none;">
                 <h2>Chat Général</h2>
                 <div class="chat-messages" id="chat-messages"></div>
@@ -100,13 +208,39 @@
                 <h2>Actions Terminées</h2>
                 <div id="past-actions-container"></div>
             </div>
+            
+            <!-- ✨ SECTION MES NFTs -->
+            <div id="nft-section" class="blockchain-section" style="display: none;">
+                <h3>🎨 Mes NFTs</h3>
+                <button id="load-my-nfts" style="background: #6f42c1;">Charger mes NFTs</button>
+                <div id="my-nfts-container"></div>
+            </div>
         </div>
     </div>
 
     <script>
         const socket = io('http://localhost:3000');
 
-        // --- DOM Elements ---
+        // Configuration blockchain
+        const TESTNET_CONFIG = {
+            chainId: '0x15b32',
+            chainName: 'Chiliz Spicy Testnet',
+            nativeCurrency: { name: 'Chiliz', symbol: 'CHZ', decimals: 18 },
+            rpcUrls: ['https://spicy-rpc.chiliz.com/'],
+            blockExplorerUrls: ['https://testnet.chiliscan.com/']
+        };
+
+        // Variables blockchain
+        let provider = null;
+        let signer = null;
+        let walletAddress = null;
+        let blockchainConnected = false;
+
+        // Variables de pari
+        let currentBetData = null;
+        let selectedBlockchainOption = null;
+
+        // --- DOM Elements existants ---
         const loginSection = document.getElementById('login-section');
         const loginButton = document.getElementById('loginButton');
         const userIdInput = document.getElementById('userIdInput');
@@ -122,21 +256,390 @@
         const chatMessages = document.getElementById('chat-messages');
         const chatInput = document.getElementById('chat-input');
         const sendChatButton = document.getElementById('send-chat-button');
+
+        // --- Nouveaux éléments blockchain ---
+        const connectWalletBtn = document.getElementById('connect-wallet-btn');
+        const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
+        const walletInfo = document.getElementById('wallet-info');
+        const walletConnection = document.getElementById('wallet-connection');
+        const walletAddressSpan = document.getElementById('wallet-address');
+        const walletBalanceSpan = document.getElementById('wallet-balance');
+        const blockchainStatus = document.getElementById('blockchain-status');
+        const blockchainModeRadio = document.getElementById('blockchain-mode');
+        const loadMyNFTsBtn = document.getElementById('load-my-nfts');
+        const myNFTsContainer = document.getElementById('my-nfts-container');
+        
+        // Nouveaux éléments pour les paris blockchain
+        const backendBetContainer = document.getElementById('backend-bet-container');
+        const blockchainBetContainer = document.getElementById('blockchain-bet-container');
+        const blockchainBetOptions = document.getElementById('blockchain-bet-options');
+        const blockchainBetAmount = document.getElementById('blockchain-bet-amount');
+        const placeBlockchainBetBtn = document.getElementById('place-blockchain-bet-btn');
+        const blockchainBetStatus = document.getElementById('blockchain-bet-status');
         
         let betTimerInterval = null;
 
-        // --- LOGIN ---
+        // --- FONCTIONS BLOCKCHAIN ---
+        
+        // Connexion MetaMask
+        connectWalletBtn.addEventListener('click', async () => {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    alert('MetaMask non détecté! Veuillez l\'installer.');
+                    return;
+                }
+
+                console.log('🔄 Connexion à MetaMask...');
+
+                // Changer vers le testnet
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: TESTNET_CONFIG.chainId }]
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [TESTNET_CONFIG]
+                        });
+                    }
+                }
+
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+
+                walletAddress = accounts[0];
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+
+                // Obtenir la balance
+                const balance = await provider.getBalance(walletAddress);
+                const balanceInCHZ = ethers.utils.formatEther(balance);
+
+                // Mettre à jour l'affichage
+                walletConnection.style.display = 'none';
+                walletInfo.style.display = 'block';
+                walletAddressSpan.textContent = `${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}`;
+                walletBalanceSpan.textContent = parseFloat(balanceInCHZ).toFixed(4);
+                blockchainStatus.textContent = '✅ Blockchain connectée';
+                blockchainStatus.className = 'blockchain-status connected';
+                
+                // Activer le mode blockchain
+                blockchainModeRadio.disabled = false;
+                placeBlockchainBetBtn.disabled = false;
+                
+                // Authentifier avec le backend
+                if (socket && socket.userId) {
+                    socket.emit('authenticate', { 
+                        userId: socket.userId, 
+                        walletAddress: walletAddress 
+                    });
+                }
+
+                blockchainConnected = true;
+                console.log(`✅ MetaMask connecté: ${walletAddress}`);
+
+                // Activer les options blockchain si un pari est en cours
+                if (currentBetData) {
+                    setupBlockchainBetOptions(currentBetData);
+                }
+
+            } catch (error) {
+                console.error('❌ Erreur connexion MetaMask:', error);
+                alert(`Erreur: ${error.message}`);
+            }
+        });
+
+        // Déconnexion wallet
+        disconnectWalletBtn.addEventListener('click', () => {
+            walletAddress = null;
+            provider = null;
+            signer = null;
+            blockchainConnected = false;
+
+            walletConnection.style.display = 'block';
+            walletInfo.style.display = 'none';
+            blockchainStatus.textContent = '⛓️ Blockchain déconnectée';
+            blockchainStatus.className = 'blockchain-status disconnected';
+            
+            blockchainModeRadio.disabled = true;
+            placeBlockchainBetBtn.disabled = true;
+            
+            // Revenir au mode backend
+            document.querySelector('input[name="bet-mode"][value="backend"]').checked = true;
+            toggleBetMode();
+            
+            console.log('👋 Wallet déconnecté');
+        });
+
+        // Basculer entre mode backend et blockchain
+        document.querySelectorAll('input[name="bet-mode"]').forEach(radio => {
+            radio.addEventListener('change', toggleBetMode);
+        });
+
+        function toggleBetMode() {
+            const isBlockchainMode = document.querySelector('input[name="bet-mode"]:checked').value === 'blockchain';
+            
+            if (isBlockchainMode) {
+                backendBetContainer.style.display = 'none';
+                blockchainBetContainer.style.display = 'block';
+                betInfo.textContent = '🔗 Mode blockchain activé - Pariez avec vos CHZ réels!';
+                betInfo.style.color = '#667eea';
+                
+                // Configurer les options si un pari est en cours
+                if (currentBetData && blockchainConnected) {
+                    setupBlockchainBetOptions(currentBetData);
+                }
+            } else {
+                backendBetContainer.style.display = 'block';
+                blockchainBetContainer.style.display = 'none';
+                betInfo.textContent = '';
+            }
+        }
+
+        // ✨ NOUVELLE FONCTION : Configuration des options blockchain
+        function setupBlockchainBetOptions(betData) {
+            if (!blockchainConnected) return;
+            
+            currentBetData = betData;
+            blockchainBetOptions.innerHTML = '';
+            blockchainBetOptions.style.display = 'block';
+            selectedBlockchainOption = null;
+            
+            betData.options.forEach((optionText, index) => {
+                const optionBtn = document.createElement('button');
+                optionBtn.className = 'blockchain-bet-option';
+                optionBtn.textContent = `${index + 1}. ${optionText}`;
+                optionBtn.onclick = () => selectBlockchainOption(index, optionText, optionBtn);
+                blockchainBetOptions.appendChild(optionBtn);
+            });
+            
+            blockchainBetStatus.innerHTML = `
+                <div style="color: #4ade80;">📊 Choisissez votre option et montant</div>
+                <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                    Les paris se font directement sur la blockchain avec vos CHZ
+                </div>
+            `;
+        }
+
+        // Sélection d'une option blockchain
+        function selectBlockchainOption(index, optionText, buttonElement) {
+            // Désélectionner les autres options
+            document.querySelectorAll('.blockchain-bet-option').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Sélectionner cette option
+            buttonElement.classList.add('selected');
+            selectedBlockchainOption = { index, text: optionText };
+            
+            blockchainBetStatus.innerHTML = `
+                <div style="color: #4ade80;">✅ Option sélectionnée: ${optionText}</div>
+                <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                    Entrez le montant et cliquez sur "Placer le pari"
+                </div>
+            `;
+            
+            // Vérifier si on peut activer le bouton
+            checkBlockchainBetReady();
+        }
+
+        // Vérifier si le pari blockchain est prêt
+        function checkBlockchainBetReady() {
+            const amount = parseFloat(blockchainBetAmount.value);
+            const canBet = selectedBlockchainOption && 
+                          amount > 0 && 
+                          blockchainConnected && 
+                          currentBetData;
+                          
+            placeBlockchainBetBtn.disabled = !canBet;
+        }
+
+        // Écouter les changements de montant
+        blockchainBetAmount.addEventListener('input', checkBlockchainBetReady);
+
+        // ✨ PLACER UN PARI BLOCKCHAIN SUR LES MÊMES OPTIONS QUE LE BACKEND
+        placeBlockchainBetBtn.addEventListener('click', async () => {
+            try {
+                if (!selectedBlockchainOption) {
+                    alert('Veuillez sélectionner une option');
+                    return;
+                }
+
+                const amount = parseFloat(blockchainBetAmount.value);
+                if (!amount || amount <= 0) {
+                    alert('Veuillez entrer un montant valide');
+                    return;
+                }
+
+                if (!walletAddress) {
+                    alert('Connectez votre wallet d\'abord');
+                    return;
+                }
+
+                console.log(`🎲 Pari blockchain: "${selectedBlockchainOption.text}" pour ${amount} CHZ`);
+                
+                // Mettre à jour le statut
+                blockchainBetStatus.innerHTML = `
+                    <div style="color: #ff9800;">⏳ Placement du pari en cours...</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        Transaction en attente de confirmation...
+                    </div>
+                `;
+                placeBlockchainBetBtn.disabled = true;
+
+                // Utiliser l'adresse du contrat EmotionBet
+                const emotionBetAddress = '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc';
+                const emotionBetABI = [
+                    "function placeBet(string description) payable"
+                ];
+
+                // Description complète incluant l'option choisie
+                const betDescription = `${currentBetData.question} - Réponse: ${selectedBlockchainOption.text}`;
+
+                const contract = new ethers.Contract(emotionBetAddress, emotionBetABI, signer);
+                const tx = await contract.placeBet(betDescription, {
+                    value: ethers.utils.parseEther(amount.toString())
+                });
+
+                blockchainBetStatus.innerHTML = `
+                    <div style="color: #ff9800;">📤 Transaction envoyée</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        Hash: ${tx.hash.substring(0, 10)}...
+                    </div>
+                `;
+
+                const receipt = await tx.wait();
+                
+                blockchainBetStatus.innerHTML = `
+                    <div style="color: #4ade80;">✅ Pari placé avec succès!</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        Block: ${receipt.blockNumber} | Option: ${selectedBlockchainOption.text}
+                    </div>
+                `;
+                
+                // Vider les champs
+                blockchainBetAmount.value = '';
+                selectedBlockchainOption = null;
+                
+                // Désélectionner les options
+                document.querySelectorAll('.blockchain-bet-option').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                
+                // Rafraîchir la balance
+                const balance = await provider.getBalance(walletAddress);
+                walletBalanceSpan.textContent = parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
+
+                console.log(`✅ Pari blockchain placé: ${betDescription}`);
+
+            } catch (error) {
+                console.error('❌ Erreur placement pari:', error);
+                
+                let errorMsg = '❌ Erreur lors du placement du pari';
+                if (error.message.includes('Pari ferme')) {
+                    errorMsg = '❌ Le contrat de paris est fermé';
+                } else if (error.message.includes('insufficient funds')) {
+                    errorMsg = '❌ Fonds insuffisants';
+                } else if (error.message.includes('user rejected')) {
+                    errorMsg = '❌ Transaction annulée par l\'utilisateur';
+                }
+                
+                blockchainBetStatus.innerHTML = `
+                    <div style="color: #f87171;">${errorMsg}</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        Réessayez ou vérifiez votre solde
+                    </div>
+                `;
+                
+                placeBlockchainBetBtn.disabled = false;
+            }
+        });
+
+        // Charger mes NFTs
+        loadMyNFTsBtn.addEventListener('click', () => {
+            if (walletAddress && socket) {
+                socket.emit('get_my_nfts');
+                myNFTsContainer.innerHTML = '<p>⏳ Chargement des NFTs...</p>';
+            } else {
+                alert('Connectez votre wallet d\'abord');
+            }
+        });
+
+        // --- ÉVÉNEMENTS SOCKET BLOCKCHAIN ---
+        
+        socket.on('blockchain_status', (data) => {
+            if (data.connected) {
+                console.log('✅ Backend blockchain connecté');
+            }
+        });
+
+        socket.on('blockchain_bet_placed', (data) => {
+            console.log(`🎲 Nouveau pari blockchain: ${data.description}`);
+        });
+
+        socket.on('blockchain_nft_minted', (data) => {
+            console.log(`🎨 NFT minté: ${data.rarity}`);
+            if (data.to.toLowerCase() === walletAddress?.toLowerCase()) {
+                loadMyNFTsBtn.click();
+            }
+        });
+
+        socket.on('my_nfts', (data) => {
+            displayMyNFTs(data.nfts);
+        });
+
+        socket.on('nfts_error', (data) => {
+            myNFTsContainer.innerHTML = `<p style="color: #dc3545;">❌ ${data.message}</p>`;
+        });
+
+        function displayMyNFTs(nfts) {
+            if (nfts.length === 0) {
+                myNFTsContainer.innerHTML = '<p>Aucun NFT trouvé</p>';
+                return;
+            }
+
+            let html = '';
+            nfts.forEach(nft => {
+                const rarityColor = {
+                    'Common': '#28a745',
+                    'Rare': '#007bff',
+                    'Epic': '#6f42c1',
+                    'Legendary': '#ffc107'
+                }[nft.rarity] || '#6c757d';
+
+                html += `
+                    <div class="nft-card">
+                        <strong>${nft.eventName}</strong><br>
+                        Rareté: <span style="color: ${rarityColor}">${nft.rarity}</span><br>
+                        Date: ${nft.eventDate}<br>
+                        Type: ${nft.eventType}<br>
+                        ID: #${nft.id}
+                    </div>
+                `;
+            });
+            myNFTsContainer.innerHTML = html;
+        }
+
+        // --- CODE EXISTANT (LOGIN, CHAT, ÉMOTIONS, PARIS BACKEND, ACTIONS) ---
+        
         loginButton.addEventListener('click', () => {
             const userId = userIdInput.value.trim();
-            if (userId) socket.emit('authenticate', { userId });
+            if (userId) socket.emit('authenticate', { userId, walletAddress });
             else loginMessage.textContent = 'Veuillez entrer un ID utilisateur.';
         });
 
         socket.on('authenticated', (data) => {
             loginSection.style.display = 'none';
-            ['user-info', 'emotion-section', 'bet-section', 'chat-section', 'action-section'].forEach(id => document.getElementById(id).style.display = 'block');
+            const sectionsToShow = ['user-info', 'emotion-section', 'bet-section', 'chat-section', 'action-section', 'blockchain-section', 'nft-section'];
+            sectionsToShow.forEach(id => document.getElementById(id).style.display = 'block');
+            
             displayUserId.textContent = data.userId;
             chzBalance.textContent = data.chzBalance.toFixed(2);
+            
+            socket.userId = data.userId;
         });
 
         socket.on('login_error', (data) => { loginMessage.textContent = data.message; });
@@ -157,16 +660,13 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
 
-        // --- EMOTIONS ---
+        // --- ÉMOTIONS ---
         document.querySelectorAll('.emotion-button').forEach(button => {
             button.addEventListener('click', () => {
                 socket.emit('send_emotion', { emotionType: button.dataset.emotion });
             });
         });
 
-        // =======================================================
-        // GESTIONNAIRE D'ÉVÉNEMENT MIS À JOUR
-        // =======================================================
         socket.on('emotion_update', (data) => {
             document.getElementById('angerCount').textContent = data.anger || 0;
             document.getElementById('surpriseCount').textContent = data.surprise || 0;
@@ -176,10 +676,10 @@
             document.getElementById('sadnessCount').textContent = data.sadness || 0;
         });
 
-        // =======================================================
-        // SECTION PARIS (CLIENT) - INCHANGÉE
-        // =======================================================
+        // --- PARIS BACKEND ET BLOCKCHAIN (code modifié) ---
         socket.on('new_bet', (bet) => {
+            currentBetData = bet; // Stocker les données du pari
+            
             betQuestion.textContent = bet.question;
             betOptionsContainer.innerHTML = '';
             betInfo.textContent = '';
@@ -201,15 +701,28 @@
                 betTimerSpan.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             }, 1000);
 
+            // Options backend (existant)
             bet.options.forEach((optionText, index) => {
                 const button = document.createElement('button');
                 button.textContent = optionText;
                 button.onclick = () => placeBet(index);
                 betOptionsContainer.appendChild(button);
             });
+            
+            // ✨ Configurer les options blockchain si le mode est activé
+            if (blockchainConnected && document.querySelector('input[name="bet-mode"]:checked').value === 'blockchain') {
+                setupBlockchainBetOptions(bet);
+            }
         });
 
         function placeBet(optionIndex) {
+            // Ne fonctionne qu'en mode backend
+            if (document.querySelector('input[name="bet-mode"]:checked').value === 'blockchain') {
+                betInfo.textContent = '⚠️ Utilisez la section blockchain pour parier';
+                betInfo.style.color = '#ff9800';
+                return;
+            }
+
             const amount = parseInt(betAmountInput.value, 10);
             if (isNaN(amount) || amount <= 0) {
                 betInfo.style.color = 'red';
@@ -241,6 +754,16 @@
             if (!betOptionsContainer.querySelector('p')) {
                 betOptionsContainer.innerHTML = '';
             }
+            
+            // Désactiver les options blockchain aussi
+            blockchainBetOptions.style.display = 'none';
+            placeBlockchainBetBtn.disabled = true;
+            blockchainBetStatus.innerHTML = `
+                <div style="color: #f87171;">⏰ Paris fermés</div>
+                <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                    Attendez le prochain pari...
+                </div>
+            `;
         });
 
         socket.on('bet_result', (data) => {
@@ -253,9 +776,17 @@
             chzBalance.textContent = data.newBalance.toFixed(2);
             betQuestion.textContent = `L'option gagnante était : ${data.winningOption}`;
             betOptionsContainer.innerHTML = '<p><i>Prochain pari dans quelques instants...</i></p>';
+            
+            // Afficher le résultat pour les paris blockchain aussi
+            blockchainBetStatus.innerHTML = `
+                <div style="color: #4ade80;">🏆 Résultat: ${data.winningOption}</div>
+                <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                    Prochain pari bientôt disponible...
+                </div>
+            `;
         });
 
-        // --- SECTION ACTIONS COLLECTIVES (INCHANGÉE) ---
+        // --- ACTIONS COLLECTIVES (code existant inchangé) ---
         const actionInput = document.getElementById('action-input');
         const proposeActionButton = document.getElementById('propose-action-button');
         const activeActionsContainer = document.getElementById('active-actions-container');
@@ -333,6 +864,24 @@
 
         function vote(actionId, voteType) {
             socket.emit('vote_action', { actionId: actionId, vote: voteType });
+        }
+
+        // Écouter les changements MetaMask
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    disconnectWalletBtn.click();
+                } else if (accounts[0] !== walletAddress) {
+                    location.reload(); // Recharger si le compte change
+                }
+            });
+
+            window.ethereum.on('chainChanged', (chainId) => {
+                if (parseInt(chainId, 16) !== 88882) {
+                    alert('⚠️ Vous devez rester sur le testnet Chiliz!');
+                    location.reload();
+                }
+            });
         }
     </script>
 </body>

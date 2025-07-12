@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FanVerse - Client Blockchain Complet</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(26, 26, 26, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .connected { border-color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+        .disconnected { border-color: #f87171; background: rgba(248, 113, 113, 0.1); }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .input::placeholder { color: rgba(255, 255, 255, 0.7); }
+        
+        .logs {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            border-radius: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+        
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .nft-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .bet-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .api-result {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 FanVerse - Test Intégration Blockchain Complète</h1>
+            <p>Backend + Blockchain + MetaMask + Client temps réel</p>
+        </div>
+
+        <!-- Barre de statut -->
+        <div class="status-grid">
+            <div class="status-card" id="backend-status">
+                <h3>🔗 Backend</h3>
+                <div id="backend-status-text">Connexion...</div>
+            </div>
+            
+            <div class="status-card" id="blockchain-status">
+                <h3>⛓️ Blockchain</h3>
+                <div id="blockchain-status-text">Vérification...</div>
+            </div>
+            
+            <div class="status-card" id="wallet-status">
+                <h3>👛 MetaMask</h3>
+                <div id="wallet-status-text">Non connecté</div>
+                <button class="button" onclick="connectWallet()" id="connect-wallet-btn">
+                    Connecter MetaMask
+                </button>
+            </div>
+            
+            <div class="status-card" id="user-status">
+                <h3>👤 Utilisateur</h3>
+                <div id="user-status-text">Non authentifié</div>
+                <div id="user-balance"></div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Section Tests API -->
+            <div class="section">
+                <h2>🧪 Tests API Blockchain</h2>
+                
+                <h3>Tests GET</h3>
+                <button class="button" onclick="testAPI('/api/blockchain/network')">
+                    Network Info
+                </button>
+                <button class="button" onclick="testAPI('/api/blockchain/bets/status')">
+                    Bets Status
+                </button>
+                <button class="button" onclick="testAPI('/api/blockchain/nfts/supply')">
+                    NFTs Supply
+                </button>
+                <button class="button" onclick="testAPI('/api/blockchain/bets')">
+                    All Bets
+                </button>
+                
+                <h3>Test avec adresse</h3>
+                <input type="text" id="test-address" class="input" placeholder="Adresse pour tester les NFTs">
+                <button class="button" onclick="testNFTsForAddress()">
+                    Tester NFTs
+                </button>
+                
+                <div id="api-results" class="api-result"></div>
+            </div>
+
+            <!-- Section Blockchain Actions -->
+            <div class="section">
+                <h2>🎲 Actions Blockchain</h2>
+                
+                <h3>Placer un pari blockchain</h3>
+                <input type="text" id="bet-description" class="input" placeholder="Description du pari...">
+                <input type="number" id="bet-amount" class="input" placeholder="Montant en CHZ" step="0.01">
+                <button class="button" onclick="placeBetBlockchain()" id="place-bet-btn" disabled>
+                    Placer le pari
+                </button>
+                
+                <h3>Mint NFT (Owner seulement)</h3>
+                <input type="text" id="nft-to" class="input" placeholder="Adresse destinataire">
+                <input type="text" id="nft-event" class="input" placeholder="Nom événement">
+                <input type="text" id="nft-date" class="input" placeholder="Date (2024-01-15)">
+                <input type="text" id="nft-type" class="input" placeholder="Type (match, training...)">
+                <input type="number" id="nft-attendance" class="input" placeholder="Participants">
+                <select id="nft-rarity" class="input">
+                    <option value="Common">Common</option>
+                    <option value="Rare">Rare</option>
+                    <option value="Epic">Epic</option>
+                    <option value="Legendary">Legendary</option>
+                </select>
+                <button class="button" onclick="mintNFT()" id="mint-nft-btn" disabled>
+                    Mint NFT
+                </button>
+                
+                <h3>🔧 Gestion du contrat</h3>
+                <button class="button" onclick="checkContractStatus()">Vérifier statut</button>
+                <button class="button" onclick="reopenContract()" id="reopen-btn" disabled>Rouvrir (Owner)</button>
+                <button class="button" onclick="closeBets()" id="close-bets-btn" disabled>Fermer paris (Owner)</button>
+                <button class="button" onclick="toggleBets()" id="toggle-bets-btn" disabled>Basculer statut</button>
+                
+                <div id="blockchain-actions-result"></div>
+            </div>
+
+            <!-- Section Mes données -->
+            <div class="section">
+                <h2>📊 Mes Données</h2>
+                
+                <button class="button" onclick="loadMyNFTs()">
+                    Charger mes NFTs
+                </button>
+                <button class="button" onclick="loadBlockchainBets()">
+                    Charger paris blockchain
+                </button>
+                <button class="button" onclick="refreshUserData()">
+                    Rafraîchir tout
+                </button>
+                
+                <h3>Mes NFTs</h3>
+                <div id="my-nfts" class="nft-grid"></div>
+                
+                <h3>Paris récents</h3>
+                <div id="recent-bets"></div>
+            </div>
+        </div>
+
+        <!-- Section complète -->
+        <div class="section">
+            <h2>🎮 Actions rapides</h2>
+            
+            <div class="status-grid">
+                <div>
+                    <h3>Tests d'intégration</h3>
+                    <button class="button" onclick="testCompleteIntegration()">
+                        🧪 Test complet
+                    </button>
+                    <button class="button" onclick="testBlockchainOnly()">
+                        ⛓️ Test blockchain
+                    </button>
+                    <button class="button" onclick="testMetaMaskOnly()">
+                        👛 Test MetaMask
+                    </button>
+                </div>
+                
+                <div>
+                    <h3>Actions utilisateur</h3>
+                    <button class="button" onclick="simulateUser()">
+                        👤 Simuler utilisateur
+                    </button>
+                    <button class="button" onclick="quickBet()">
+                        🎲 Pari rapide
+                    </button>
+                    <button class="button" onclick="quickNFT()">
+                        🎨 NFT rapide
+                    </button>
+                </div>
+                
+                <div>
+                    <h3>Monitoring</h3>
+                    <button class="button" onclick="startRealTimeMonitoring()">
+                        📡 Monitor temps réel
+                    </button>
+                    <button class="button" onclick="clearLogs()">
+                        🧹 Vider logs
+                    </button>
+                    <button class="button" onclick="exportData()">
+                        💾 Exporter données
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="logs" id="logs"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const BACKEND_URL = 'http://localhost:3000';
+        const TESTNET_CONFIG = {
+            chainId: '0x15b32',
+            chainName: 'Chiliz Spicy Testnet',
+            nativeCurrency: { name: 'Chiliz', symbol: 'CHZ', decimals: 18 },
+            rpcUrls: ['https://spicy-rpc.chiliz.com/'],
+            blockExplorerUrls: ['https://testnet.chiliscan.com/']
+        };
+
+        // Variables globales
+        let socket = null;
+        let provider = null;
+        let signer = null;
+        let walletAddress = null;
+        let userId = null;
+        let backendConnected = false;
+        let blockchainConnected = false;
+        let monitoringActive = false;
+
+        // Fonction de logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#64b5f6',
+                success: '#4caf50',
+                error: '#f44336',
+                warning: '#ff9800',
+                blockchain: '#9c27b0'
+            };
+            
+            const logsDiv = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            logEntry.style.color = colors[type];
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        // Connexion au backend WebSocket
+        function connectBackend() {
+            socket = io(BACKEND_URL);
+            
+            socket.on('connect', () => {
+                log('✅ Backend WebSocket connecté', 'success');
+                backendConnected = true;
+                updateStatus('backend-status', 'connected', 'Connecté WebSocket');
+            });
+
+            socket.on('disconnect', () => {
+                log('❌ Backend WebSocket déconnecté', 'error');
+                backendConnected = false;
+                updateStatus('backend-status', 'disconnected', 'Déconnecté');
+            });
+
+            socket.on('blockchain_status', (data) => {
+                blockchainConnected = data.connected;
+                updateStatus('blockchain-status', 
+                    data.connected ? 'connected' : 'disconnected',
+                    data.connected ? 'Connectée' : 'Déconnectée'
+                );
+                
+                if (data.connected) {
+                    log('✅ Blockchain connectée via backend', 'blockchain');
+                    log(`📄 EmotionBet: ${data.contracts.emotionBet}`, 'blockchain');
+                    log(`🎨 AttendanceNFT: ${data.contracts.attendanceNFT}`, 'blockchain');
+                    enableBlockchainButtons();
+                }
+            });
+
+            socket.on('blockchain_bet_placed', (data) => {
+                log(`🎲 Nouveau pari blockchain: ${data.description} (${data.amount} CHZ)`, 'blockchain');
+                loadBlockchainBets(); // Recharger automatiquement
+            });
+
+            socket.on('blockchain_nft_minted', (data) => {
+                log(`🎨 Nouveau NFT minté: ${data.rarity} pour ${data.to.substring(0, 8)}...`, 'blockchain');
+                if (data.to.toLowerCase() === walletAddress?.toLowerCase()) {
+                    loadMyNFTs(); // Recharger mes NFTs si c'est pour moi
+                }
+            });
+
+            socket.on('authenticated', (data) => {
+                log(`👤 Authentifié: ${data.userId}`, 'success');
+                updateStatus('user-status', 'connected', `Connecté: ${data.userId}`);
+                document.getElementById('user-balance').textContent = `Balance: ${data.chzBalance} CHZ`;
+            });
+
+            socket.on('my_nfts', (data) => {
+                displayNFTs(data.nfts);
+                log(`📦 ${data.nfts.length} NFTs chargés`, 'success');
+            });
+
+            socket.on('blockchain_bets', (data) => {
+                displayBets(data.bets);
+                log(`🎲 ${data.bets.length} paris blockchain chargés`, 'success');
+            });
+
+            socket.on('nfts_error', (data) => {
+                log(`❌ Erreur NFTs: ${data.message}`, 'error');
+            });
+
+            socket.on('blockchain_bets_error', (data) => {
+                log(`❌ Erreur paris: ${data.message}`, 'error');
+            });
+        }
+
+        // Connexion MetaMask
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    log('❌ MetaMask non détecté!', 'error');
+                    return;
+                }
+
+                log('🔄 Connexion à MetaMask...', 'info');
+
+                // Changer vers le testnet
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: TESTNET_CONFIG.chainId }]
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [TESTNET_CONFIG]
+                        });
+                    }
+                }
+
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+
+                walletAddress = accounts[0];
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+
+                log(`✅ MetaMask connecté: ${walletAddress}`, 'success');
+                updateStatus('wallet-status', 'connected', 'Connecté');
+                document.getElementById('wallet-status-text').innerHTML = 
+                    `${walletAddress.substring(0, 8)}...${walletAddress.substring(walletAddress.length - 6)}`;
+                
+                // Authentifier avec le backend
+                if (socket) {
+                    userId = `user_${walletAddress.substring(2, 10)}`;
+                    socket.emit('authenticate', { userId, walletAddress });
+                }
+
+                enableWalletButtons();
+                autoFillForms();
+
+            } catch (error) {
+                log(`❌ Erreur connexion MetaMask: ${error.message}`, 'error');
+            }
+        }
+
+        // Tests API
+        async function testAPI(endpoint) {
+            try {
+                log(`🧪 Test API: ${endpoint}`, 'info');
+                const response = await fetch(`${BACKEND_URL}${endpoint}`);
+                const data = await response.json();
+                
+                document.getElementById('api-results').textContent = 
+                    JSON.stringify(data, null, 2);
+                
+                if (data.success) {
+                    log(`✅ API ${endpoint}: SUCCESS`, 'success');
+                } else {
+                    log(`❌ API ${endpoint}: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Erreur API ${endpoint}: ${error.message}`, 'error');
+                document.getElementById('api-results').textContent = 
+                    `Erreur: ${error.message}`;
+            }
+        }
+
+        async function testNFTsForAddress() {
+            const address = document.getElementById('test-address').value.trim() || walletAddress;
+            if (!address) {
+                log('❌ Aucune adresse fournie', 'error');
+                return;
+            }
+            
+            // NOUVELLE SYNTAXE avec query parameter
+            await testAPI(`/api/blockchain/nfts?address=${address}`);
+        }
+
+        // Actions blockchain
+        async function placeBetBlockchain() {
+            try {
+                const description = document.getElementById('bet-description').value.trim();
+                const amount = document.getElementById('bet-amount').value;
+
+                if (!description || !amount) {
+                    log('❌ Veuillez remplir tous les champs', 'error');
+                    return;
+                }
+
+                if (!walletAddress) {
+                    log('❌ Connectez votre wallet d\'abord', 'error');
+                    return;
+                }
+
+                log(`🎲 Placement du pari blockchain: "${description}"`, 'info');
+
+                // Via MetaMask directement (pour tester l'intégration complète)
+                const emotionBetAddress = '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc'; // Votre adresse
+                const emotionBetABI = [
+                    "function placeBet(string description) payable"
+                ];
+
+                const contract = new ethers.Contract(emotionBetAddress, emotionBetABI, signer);
+                const tx = await contract.placeBet(description, {
+                    value: ethers.utils.parseEther(amount)
+                });
+
+                log(`📤 Transaction envoyée: ${tx.hash}`, 'info');
+                
+                const receipt = await tx.wait();
+                log(`✅ Pari placé! Block: ${receipt.blockNumber}`, 'success');
+                
+                // Vider les champs
+                document.getElementById('bet-description').value = '';
+                document.getElementById('bet-amount').value = '';
+                
+                // Recharger les paris
+                setTimeout(loadBlockchainBets, 2000);
+
+            } catch (error) {
+                log(`❌ Erreur placement pari: ${error.message}`, 'error');
+            }
+        }
+
+        async function mintNFT() {
+            try {
+                const to = document.getElementById('nft-to').value.trim() || walletAddress;
+                const eventName = document.getElementById('nft-event').value.trim();
+                const eventDate = document.getElementById('nft-date').value.trim();
+                const eventType = document.getElementById('nft-type').value.trim();
+                const attendanceCount = document.getElementById('nft-attendance').value;
+                const rarity = document.getElementById('nft-rarity').value;
+
+                if (!eventName || !eventDate || !eventType || !attendanceCount) {
+                    log('❌ Veuillez remplir tous les champs', 'error');
+                    return;
+                }
+
+                log(`🎨 Mint NFT ${rarity} via API backend`, 'blockchain');
+
+                const response = await fetch(`${BACKEND_URL}/api/blockchain/nfts/mint`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to, eventName, eventDate, eventType,
+                        attendanceCount: parseInt(attendanceCount),
+                        rarity
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ NFT minté! Hash: ${result.data.transactionHash}`, 'success');
+                    setTimeout(loadMyNFTs, 2000);
+                } else {
+                    log(`❌ Erreur mint: ${result.error}`, 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Erreur mint NFT: ${error.message}`, 'error');
+            }
+        }
+
+        // Chargement des données
+        function loadMyNFTs() {
+            if (socket && walletAddress) {
+                socket.emit('get_my_nfts');
+            } else {
+                log('❌ Socket ou wallet non connecté', 'error');
+            }
+        }
+
+        function loadBlockchainBets() {
+            if (socket) {
+                socket.emit('get_blockchain_bets');
+            } else {
+                log('❌ Socket non connecté', 'error');
+            }
+        }
+
+        // Affichage des données
+        function displayNFTs(nfts) {
+            const container = document.getElementById('my-nfts');
+            container.innerHTML = '';
+            
+            nfts.forEach(nft => {
+                const nftDiv = document.createElement('div');
+                nftDiv.className = 'nft-card';
+                nftDiv.innerHTML = `
+                    <h4>NFT #${nft.id}</h4>
+                    <strong>${nft.eventName}</strong><br>
+                    Rareté: <span style="color: ${getRarityColor(nft.rarity)}">${nft.rarity}</span><br>
+                    Date: ${nft.eventDate}<br>
+                    Type: ${nft.eventType}<br>
+                    Participants: ${nft.attendanceCount}<br>
+                    <small>ID: ${nft.id}</small>
+                `;
+                container.appendChild(nftDiv);
+            });
+        }
+
+        function displayBets(bets) {
+            const container = document.getElementById('recent-bets');
+            container.innerHTML = '';
+            
+            bets.slice(0, 5).forEach(bet => {
+                const betDiv = document.createElement('div');
+                betDiv.className = 'bet-item';
+                betDiv.innerHTML = `
+                    <strong>${bet.description}</strong><br>
+                    Montant: ${bet.amount} CHZ<br>
+                    User: ${bet.user.substring(0, 8)}...${bet.user.substring(bet.user.length - 6)}
+                `;
+                container.appendChild(betDiv);
+            });
+        }
+
+        function getRarityColor(rarity) {
+            const colors = {
+                'Common': '#4ade80',
+                'Rare': '#3b82f6',
+                'Epic': '#8b5cf6',
+                'Legendary': '#f59e0b'
+            };
+            return colors[rarity] || '#6b7280';
+        }
+
+        // Tests d'intégration
+        async function testCompleteIntegration() {
+            log('🧪 === Test d\'intégration COMPLET ===', 'info');
+            
+            // Test 1: Backend
+            log('1. Test backend WebSocket...', 'info');
+            if (!backendConnected) {
+                log('❌ Backend non connecté', 'error');
+                return;
+            }
+            
+            // Test 2: Blockchain
+            log('2. Test blockchain...', 'info');
+            if (!blockchainConnected) {
+                log('❌ Blockchain non connectée', 'error');
+                return;
+            }
+            
+            // Test 3: MetaMask
+            log('3. Test MetaMask...', 'info');
+            if (!walletAddress) {
+                log('❌ MetaMask non connecté', 'error');
+                return;
+            }
+            
+            // Test 4: APIs
+            log('4. Test APIs...', 'info');
+            await testAPI('/api/blockchain/network');
+            await testAPI('/api/blockchain/bets/status');
+            await testAPI('/api/blockchain/nfts/supply');
+            
+            // Test 5: Données utilisateur
+            log('5. Test données utilisateur...', 'info');
+            loadMyNFTs();
+            loadBlockchainBets();
+            
+            log('✅ === Test d\'intégration RÉUSSI! ===', 'success');
+        }
+
+        async function testBlockchainOnly() {
+            log('⛓️ Test blockchain uniquement...', 'blockchain');
+            await testAPI('/api/blockchain/network');
+            await testAPI('/api/blockchain/bets/status');
+            await testAPI('/api/blockchain/nfts/supply');
+        }
+
+        function testMetaMaskOnly() {
+            log('👛 Test MetaMask uniquement...', 'info');
+            if (window.ethereum) {
+                log('✅ MetaMask détecté', 'success');
+                window.ethereum.request({ method: 'eth_accounts' })
+                    .then(accounts => {
+                        if (accounts.length > 0) {
+                            log(`✅ Comptes: ${accounts.length}`, 'success');
+                        } else {
+                            log('⚠️ Aucun compte connecté', 'warning');
+                        }
+                    });
+            } else {
+                log('❌ MetaMask non détecté', 'error');
+            }
+        }
+
+        // Actions rapides
+        function simulateUser() {
+            if (!walletAddress) {
+                connectWallet();
+                return;
+            }
+            
+            log('👤 Simulation utilisateur complet...', 'info');
+            autoFillForms();
+            loadMyNFTs();
+            loadBlockchainBets();
+        }
+
+        function quickBet() {
+            document.getElementById('bet-description').value = 'Test pari rapide - PSG vs Barcelona';
+            document.getElementById('bet-amount').value = '0.01';
+            log('🎲 Formulaire pari pré-rempli', 'info');
+        }
+
+        function quickNFT() {
+            document.getElementById('nft-to').value = walletAddress || '';
+            document.getElementById('nft-event').value = 'PSG vs Barcelona Test';
+            document.getElementById('nft-date').value = '2024-01-15';
+            document.getElementById('nft-type').value = 'match';
+            document.getElementById('nft-attendance').value = '75000';
+            document.getElementById('nft-rarity').value = 'Common';
+            log('🎨 Formulaire NFT pré-rempli', 'info');
+        }
+
+        function startRealTimeMonitoring() {
+            if (monitoringActive) {
+                log('📡 Monitoring déjà actif', 'warning');
+                return;
+            }
+            
+            monitoringActive = true;
+            log('📡 Monitoring temps réel activé', 'info');
+            
+            const interval = setInterval(() => {
+                if (!monitoringActive) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                // Vérifier les statuts périodiquement
+                if (backendConnected && blockchainConnected) {
+                    loadBlockchainBets();
+                }
+            }, 30000); // Toutes les 30 secondes
+        }
+
+        // Fonctions utilitaires
+        function updateStatus(elementId, status, text) {
+            const element = document.getElementById(elementId);
+            element.className = `status-card ${status}`;
+            const textElement = element.querySelector('div');
+            if (textElement) {
+                textElement.textContent = text;
+            }
+        }
+
+        function enableWalletButtons() {
+            document.getElementById('place-bet-btn').disabled = false;
+            document.getElementById('mint-nft-btn').disabled = false;
+        }
+
+        function enableBlockchainButtons() {
+            // Activer les boutons qui dépendent de la blockchain
+        }
+
+        function autoFillForms() {
+            document.getElementById('test-address').value = walletAddress || '';
+            document.getElementById('nft-to').value = walletAddress || '';
+        }
+
+        function refreshUserData() {
+            log('🔄 Rafraîchissement des données...', 'info');
+            loadMyNFTs();
+            loadBlockchainBets();
+            testAPI('/api/blockchain/network');
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            log('🧹 Logs effacés', 'info');
+        }
+
+        function exportData() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                wallet: walletAddress,
+                backendConnected,
+                blockchainConnected,
+                logs: document.getElementById('logs').innerHTML
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fanverse-test-${Date.now()}.json`;
+            a.click();
+            
+            log('💾 Données exportées', 'success');
+        }
+
+        // Initialisation
+        window.addEventListener('load', () => {
+            log('🚀 Client de test blockchain chargé!', 'success');
+            connectBackend();
+            
+            // Auto-fill avec les valeurs par défaut
+            quickBet();
+            quickNFT();
+        });
+
+        // Écouter les changements MetaMask
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    log('👋 MetaMask déconnecté', 'warning');
+                    location.reload();
+                } else {
+                    log(`🔄 Compte changé: ${accounts[0]}`, 'info');
+                    location.reload();
+                }
+            });
+
+            window.ethereum.on('chainChanged', (chainId) => {
+                log(`🌐 Réseau changé: ${chainId}`, 'info');
+                location.reload();
+            });
+        }
+
+        // Ajouter ces fonctions
+        async function checkContractStatus() {
+            try {
+                const emotionBetAddress = '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc';
+                const emotionBetABI = [
+                    "function owner() view returns (address)",
+                    "function closed() view returns (bool)",
+                    "function getBetCount() view returns (uint256)"
+                ];
+
+                const contract = new ethers.Contract(emotionBetAddress, emotionBetABI, provider);
+                
+                const [owner, closed, betCount] = await Promise.all([
+                    contract.owner(),
+                    contract.closed(),
+                    contract.getBetCount()
+                ]);
+
+                log(`📊 Statut du contrat:`, 'info');
+                log(`   Owner: ${owner}`, 'info');
+                log(`   Fermé: ${closed}`, closed ? 'error' : 'success');
+                log(`   Nombre de paris: ${betCount.toString()}`, 'info');
+                log(`   Votre adresse: ${walletAddress}`, 'info');
+                
+                // Activer le bouton si on est owner et le contrat est fermé
+                if (owner.toLowerCase() === walletAddress?.toLowerCase() && closed) {
+                    document.getElementById('reopen-btn').disabled = false;
+                    log('👑 Vous êtes owner ! Vous pouvez redéployer', 'success');
+                } else if (closed) {
+                    log('❌ Contrat fermé et vous n\'êtes pas owner', 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Erreur vérification: ${error.message}`, 'error');
+            }
+        }
+
+        async function reopenContract() {
+            log('🚨 Le contrat est fermé définitivement. Il faut redéployer!', 'warning');
+            log('📝 Utilisons un nouveau contrat de test...', 'info');
+            
+            // Alternative: utiliser l'API backend pour placer le pari
+            await placeBetViaBackend();
+        }
+
+        async function placeBetViaBackend() {
+            try {
+                const description = document.getElementById('bet-description').value.trim();
+                const amount = document.getElementById('bet-amount').value;
+
+                if (!description || !amount) {
+                    log('❌ Veuillez remplir tous les champs', 'error');
+                    return;
+                }
+
+                log(`🎲 Placement du pari via API backend: "${description}"`, 'info');
+
+                const response = await fetch(`${BACKEND_URL}/api/blockchain/bets/place`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        description,
+                        amount,
+                        userAddress: walletAddress
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    log(`✅ Pari placé via backend! Hash: ${result.data.transactionHash}`, 'success');
+                    setTimeout(loadBlockchainBets, 2000);
+                } else {
+                    log(`❌ Erreur backend: ${result.error}`, 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Erreur placement via backend: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

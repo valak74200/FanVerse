@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FanVerse - Test Suite Complète</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #00ff00;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 2rem;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .test-section {
+            border: 1px solid #00ff00;
+            padding: 1.5rem;
+            background: rgba(0, 255, 0, 0.05);
+        }
+        
+        .button {
+            background: linear-gradient(45deg, #00ff00, #00cc00);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .button:hover {
+            background: linear-gradient(45deg, #00cc00, #009900);
+            box-shadow: 0 0 10px #00ff00;
+        }
+        
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .test-result {
+            background: #000;
+            border: 1px solid #00ff00;
+            padding: 1rem;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-item {
+            text-align: center;
+            padding: 1rem;
+            border: 1px solid #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+        
+        .status-connected { border-color: #00ff00; color: #00ff00; }
+        .status-disconnected { border-color: #ff0000; color: #ff0000; }
+        .status-testing { border-color: #ffff00; color: #ffff00; }
+        
+        .logs {
+            background: #000;
+            border: 2px solid #00ff00;
+            padding: 1rem;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            margin-top: 2rem;
+        }
+        
+        .input {
+            background: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 8px;
+            font-family: 'Courier New', monospace;
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #000;
+            border: 1px solid #00ff00;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #00cc00);
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 FANVERSE - TEST SUITE AUTOMATISÉE 🧪</h1>
+            <p>Test complet Backend + Blockchain + Wallets + Contrats</p>
+        </div>
+
+        <!-- Barre de statut -->
+        <div class="status-bar">
+            <div class="status-item" id="backend-status">
+                <h3>🔗 BACKEND</h3>
+                <div id="backend-text">DISCONNECTED</div>
+            </div>
+            <div class="status-item" id="blockchain-status">
+                <h3>⛓️ BLOCKCHAIN</h3>
+                <div id="blockchain-text">CHECKING...</div>
+            </div>
+            <div class="status-item" id="wallet-status">
+                <h3>👛 WALLET</h3>
+                <div id="wallet-text">NOT CONNECTED</div>
+            </div>
+            <div class="status-item" id="contract-status">
+                <h3>📄 CONTRACTS</h3>
+                <div id="contract-text">NOT TESTED</div>
+            </div>
+        </div>
+
+        <!-- Barre de progression -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div id="progress-text">Ready to start tests...</div>
+
+        <div class="test-grid">
+            <!-- Tests de base -->
+            <div class="test-section">
+                <h2>🔧 TESTS DE BASE</h2>
+                <button class="button" onclick="runBasicTests()">▶️ Tests Basic</button>
+                <button class="button" onclick="connectAllSystems()">🔌 Connect All</button>
+                <button class="button" onclick="testBackendAPI()">🔗 Test Backend API</button>
+                <button class="button" onclick="testWalletConnection()">👛 Test Wallet</button>
+                <div class="test-result" id="basic-results"></div>
+            </div>
+
+            <!-- Tests EmotionBet -->
+            <div class="test-section">
+                <h2>🎲 EMOTIONBET TESTS</h2>
+                <button class="button" onclick="testEmotionBetContract()">▶️ Test EmotionBet</button>
+                <button class="button" onclick="testPlaceBet()">🎯 Place Bet</button>
+                <button class="button" onclick="testBetReading()">📖 Read Bets</button>
+                <button class="button" onclick="testOwnerFunctions()">👑 Owner Functions</button>
+                <div class="test-result" id="emotionbet-results"></div>
+            </div>
+
+            <!-- Tests AttendanceNFT -->
+            <div class="test-section">
+                <h2>🎨 ATTENDANCE NFT TESTS</h2>
+                <button class="button" onclick="testAttendanceNFTContract()">▶️ Test AttendanceNFT</button>
+                <button class="button" onclick="testMintAllRarities()">🎨 Mint All Types</button>
+                <button class="button" onclick="testNFTReading()">📖 Read NFTs</button>
+                <button class="button" onclick="testUserNFTs()">👤 User NFTs</button>
+                <div class="test-result" id="nft-results"></div>
+            </div>
+
+            <!-- Tests d'intégration -->
+            <div class="test-section">
+                <h2>🔄 INTEGRATION TESTS</h2>
+                <button class="button" onclick="testFullIntegration()">▶️ Full Integration</button>
+                <button class="button" onclick="testRealTimeUpdates()">📡 Real-time Updates</button>
+                <button class="button" onclick="testMultiUserScenario()">👥 Multi-user Test</button>
+                <button class="button" onclick="stressTestContracts()">⚡ Stress Test</button>
+                <div class="test-result" id="integration-results"></div>
+            </div>
+        </div>
+
+        <!-- Contrôles de test -->
+        <div class="test-section">
+            <h2>🎮 CONTRÔLES DE TEST</h2>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                <button class="button" onclick="runAllTests()">🚀 RUN ALL TESTS</button>
+                <button class="button" onclick="resetAllTests()">🔄 RESET</button>
+                <button class="button" onclick="exportResults()">💾 EXPORT</button>
+                <button class="button" onclick="generateReport()">📊 REPORT</button>
+            </div>
+            
+            <h3>Configuration de test:</h3>
+            <input type="text" class="input" id="custom-bet-amount" placeholder="Montant de test (CHZ)" value="0.001">
+            <input type="text" class="input" id="custom-event-name" placeholder="Nom d'événement de test" value="Test Auto Event">
+            <input type="number" class="input" id="stress-test-count" placeholder="Nombre de tests stress" value="5">
+        </div>
+
+        <!-- Console de logs -->
+        <div class="logs" id="logs"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            BACKEND_URL: 'http://localhost:3000',
+            EMOTION_BET_ADDRESS: '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc',
+            ATTENDANCE_NFT_ADDRESS: '0x98d2Ab4D5235CE1f53Ed2A1e1B2F0E7d003E7517',
+            TESTNET_CONFIG: {
+                chainId: '0x15b32',
+                chainName: 'Chiliz Spicy Testnet',
+                nativeCurrency: { name: 'Chiliz', symbol: 'CHZ', decimals: 18 },
+                rpcUrls: ['https://spicy-rpc.chiliz.com/'],
+                blockExplorerUrls: ['https://testnet.chiliscan.com/']
+            }
+        };
+
+        // ABI des contrats
+        const EMOTION_BET_ABI = [
+            "function owner() view returns (address)",
+            "function bets(uint256) view returns (address user, string description, uint96 amount)",
+            "function closed() view returns (bool)",
+            "function placeBet(string description) payable",
+            "function endBet()",
+            "function getAllBets() view returns (tuple(address user, string description, uint96 amount)[])",
+            "function getBetCount() view returns (uint256)",
+            "event BetPlaced(address indexed user, string description, uint96 amount)"
+        ];
+
+        const ATTENDANCE_NFT_ABI = [
+            "function owner() view returns (address)",
+            "function nextTokenId() view returns (uint256)",
+            "function nftMetadata(uint256) view returns (tuple(string eventName, string eventDate, string eventType, string rarity, string imageUrl, uint32 attendanceCount, uint64 timestamp))",
+            "function getUserNFTs(address) view returns (uint256[])",
+            "function tokenOwner(uint256) view returns (address)",
+            "function getTotalSupply() view returns (uint256)",
+            "function mintCommonNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount)",
+            "function mintRareNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount)",
+            "function mintEpicNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount)",
+            "function mintLegendaryNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount)",
+            "function getNFTMetadata(uint256) view returns (tuple(string eventName, string eventDate, string eventType, string rarity, string imageUrl, uint32 attendanceCount, uint64 timestamp))",
+            "event NFTMinted(address indexed to, uint256 indexed tokenId, string rarity)"
+        ];
+
+        // Variables globales
+        let socket = null;
+        let provider = null;
+        let signer = null;
+        let walletAddress = null;
+        let emotionBetContract = null;
+        let attendanceNFTContract = null;
+        let testResults = {
+            backend: { status: 'not_tested', tests: [] },
+            wallet: { status: 'not_tested', tests: [] },
+            emotionbet: { status: 'not_tested', tests: [] },
+            nft: { status: 'not_tested', tests: [] },
+            integration: { status: 'not_tested', tests: [] }
+        };
+        let totalTests = 0;
+        let completedTests = 0;
+
+        // === FONCTIONS DE LOGGING ===
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#00ff00',
+                success: '#00ff00',
+                error: '#ff0000',
+                warning: '#ffff00',
+                test: '#00ffff'
+            };
+            
+            const logsDiv = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            logEntry.style.color = colors[type];
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function updateStatus(section, status, text) {
+            const element = document.getElementById(`${section}-status`);
+            const textElement = document.getElementById(`${section}-text`);
+            
+            element.className = `status-item status-${status}`;
+            textElement.textContent = text;
+        }
+
+        function updateProgress(percentage, text) {
+            document.getElementById('progress-fill').style.width = `${percentage}%`;
+            document.getElementById('progress-text').textContent = text;
+        }
+
+        function addTestResult(section, testName, result, details = '') {
+            const container = document.getElementById(`${section}-results`);
+            const resultDiv = document.createElement('div');
+            resultDiv.style.color = result ? '#00ff00' : '#ff0000';
+            resultDiv.innerHTML = `${result ? '✅' : '❌'} ${testName}: ${details}`;
+            container.appendChild(resultDiv);
+            
+            // Mise à jour des statistiques
+            testResults[section].tests.push({ name: testName, result, details });
+            completedTests++;
+            
+            if (totalTests > 0) {
+                const percentage = (completedTests / totalTests) * 100;
+                updateProgress(percentage, `${completedTests}/${totalTests} tests completed`);
+            }
+        }
+
+        // === TESTS DE BASE ===
+        async function connectAllSystems() {
+            log('🚀 DÉBUT DE LA CONNEXION À TOUS LES SYSTÈMES', 'test');
+            updateProgress(0, 'Connecting all systems...');
+            
+            try {
+                // 1. Backend
+                await connectBackend();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // 2. Wallet
+                await connectWallet();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // 3. Contrats
+                await connectContracts();
+                
+                log('✅ TOUS LES SYSTÈMES CONNECTÉS!', 'success');
+                updateProgress(100, 'All systems connected!');
+                
+            } catch (error) {
+                log(`❌ Erreur connexion systèmes: ${error.message}`, 'error');
+            }
+        }
+
+        async function connectBackend() {
+            return new Promise((resolve, reject) => {
+                try {
+                    socket = io(CONFIG.BACKEND_URL);
+                    
+                    socket.on('connect', () => {
+                        log('✅ Backend WebSocket connecté', 'success');
+                        updateStatus('backend', 'connected', 'CONNECTED');
+                        resolve();
+                    });
+
+                    socket.on('disconnect', () => {
+                        updateStatus('backend', 'disconnected', 'DISCONNECTED');
+                    });
+
+                    socket.on('blockchain_status', (data) => {
+                        if (data.connected) {
+                            updateStatus('blockchain', 'connected', 'CONNECTED');
+                            log(`✅ Blockchain backend: ${data.contracts.emotionBet}`, 'success');
+                        }
+                    });
+
+                    // Timeout de 5 secondes
+                    setTimeout(() => {
+                        if (!socket.connected) {
+                            reject(new Error('Timeout connexion backend'));
+                        }
+                    }, 5000);
+
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    throw new Error('MetaMask non détecté');
+                }
+
+                log('🔄 Connexion MetaMask...', 'test');
+                updateStatus('wallet', 'testing', 'CONNECTING...');
+
+                // Changer vers le testnet
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: CONFIG.TESTNET_CONFIG.chainId }]
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [CONFIG.TESTNET_CONFIG]
+                        });
+                    }
+                }
+
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+
+                walletAddress = accounts[0];
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+
+                // Vérifier la balance
+                const balance = await provider.getBalance(walletAddress);
+                const balanceETH = ethers.utils.formatEther(balance);
+
+                log(`✅ Wallet connecté: ${walletAddress}`, 'success');
+                log(`💰 Balance: ${parseFloat(balanceETH).toFixed(4)} CHZ`, 'info');
+                updateStatus('wallet', 'connected', `CONNECTED (${parseFloat(balanceETH).toFixed(2)} CHZ)`);
+
+                // Authentifier avec le backend
+                if (socket) {
+                    const userId = `tester_${walletAddress.substring(2, 10)}`;
+                    socket.emit('authenticate', { userId, walletAddress });
+                }
+
+            } catch (error) {
+                log(`❌ Erreur connexion wallet: ${error.message}`, 'error');
+                updateStatus('wallet', 'disconnected', 'ERROR');
+                throw error;
+            }
+        }
+
+        async function connectContracts() {
+            try {
+                log('🔄 Connexion aux contrats...', 'test');
+                updateStatus('contract', 'testing', 'CONNECTING...');
+
+                emotionBetContract = new ethers.Contract(
+                    CONFIG.EMOTION_BET_ADDRESS,
+                    EMOTION_BET_ABI,
+                    signer
+                );
+
+                attendanceNFTContract = new ethers.Contract(
+                    CONFIG.ATTENDANCE_NFT_ADDRESS,
+                    ATTENDANCE_NFT_ABI,
+                    signer
+                );
+
+                // Test de connexion
+                const [emotionOwner, nftOwner] = await Promise.all([
+                    emotionBetContract.owner(),
+                    attendanceNFTContract.owner()
+                ]);
+
+                log(`✅ EmotionBet owner: ${emotionOwner}`, 'success');
+                log(`✅ AttendanceNFT owner: ${nftOwner}`, 'success');
+                updateStatus('contract', 'connected', 'CONNECTED');
+
+            } catch (error) {
+                log(`❌ Erreur connexion contrats: ${error.message}`, 'error');
+                updateStatus('contract', 'disconnected', 'ERROR');
+                throw error;
+            }
+        }
+
+        // === TESTS BACKEND API ===
+        async function testBackendAPI() {
+            log('🧪 === TESTS BACKEND API ===', 'test');
+            totalTests += 5;
+            
+            const endpoints = [
+                '/api/blockchain/network',
+                '/api/blockchain/bets/status',
+                '/api/blockchain/bets',
+                '/api/blockchain/nfts/supply',
+                `/api/blockchain/nfts?address=${walletAddress}`
+            ];
+
+            for (let endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${CONFIG.BACKEND_URL}${endpoint}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        addTestResult('backend', `API ${endpoint}`, true, 'SUCCESS');
+                    } else {
+                        addTestResult('backend', `API ${endpoint}`, false, data.error);
+                    }
+                } catch (error) {
+                    addTestResult('backend', `API ${endpoint}`, false, error.message);
+                }
+            }
+        }
+
+        // === TESTS WALLET ===
+        async function testWalletConnection() {
+            log('🧪 === TESTS WALLET ===', 'test');
+            totalTests += 4;
+
+            // Test 1: MetaMask disponible
+            const metamaskAvailable = typeof window.ethereum !== 'undefined';
+            addTestResult('wallet', 'MetaMask Available', metamaskAvailable);
+
+            if (!metamaskAvailable) return;
+
+            try {
+                // Test 2: Réseau correct
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                const correctNetwork = chainId === CONFIG.TESTNET_CONFIG.chainId;
+                addTestResult('wallet', 'Correct Network', correctNetwork, `Chain ID: ${chainId}`);
+
+                // Test 3: Compte connecté
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                const accountConnected = accounts.length > 0;
+                addTestResult('wallet', 'Account Connected', accountConnected, `Accounts: ${accounts.length}`);
+
+                // Test 4: Balance suffisante
+                if (provider && walletAddress) {
+                    const balance = await provider.getBalance(walletAddress);
+                    const hasBalance = balance.gt(ethers.utils.parseEther('0.001'));
+                    addTestResult('wallet', 'Sufficient Balance', hasBalance, 
+                        `${ethers.utils.formatEther(balance)} CHZ`);
+                }
+
+            } catch (error) {
+                addTestResult('wallet', 'Wallet Tests', false, error.message);
+            }
+        }
+
+        // === TESTS EMOTIONBET ===
+        async function testEmotionBetContract() {
+            log('🧪 === TESTS EMOTIONBET CONTRACT ===', 'test');
+            totalTests += 6;
+
+            if (!emotionBetContract) {
+                addTestResult('emotionbet', 'Contract Available', false, 'Contract not connected');
+                return;
+            }
+
+            try {
+                // Test 1: Owner
+                const owner = await emotionBetContract.owner();
+                addTestResult('emotionbet', 'Get Owner', true, `Owner: ${owner.substring(0, 8)}...`);
+
+                // Test 2: Status
+                const closed = await emotionBetContract.closed();
+                addTestResult('emotionbet', 'Get Status', true, `Closed: ${closed}`);
+
+                // Test 3: Bet Count
+                const betCount = await emotionBetContract.getBetCount();
+                addTestResult('emotionbet', 'Get Bet Count', true, `Count: ${betCount.toString()}`);
+
+                // Test 4: Get All Bets
+                const allBets = await emotionBetContract.getAllBets();
+                addTestResult('emotionbet', 'Get All Bets', true, `Bets: ${allBets.length}`);
+
+                // Test 5: Place Bet (si ouvert)
+                if (!closed) {
+                    await testPlaceBetFunction();
+                } else {
+                    addTestResult('emotionbet', 'Place Bet', false, 'Contract closed');
+                }
+
+                // Test 6: Owner functions (si owner)
+                if (owner.toLowerCase() === walletAddress?.toLowerCase()) {
+                    addTestResult('emotionbet', 'Owner Access', true, 'You are owner');
+                } else {
+                    addTestResult('emotionbet', 'Owner Access', false, 'Not owner');
+                }
+
+            } catch (error) {
+                addTestResult('emotionbet', 'Contract Tests', false, error.message);
+            }
+        }
+
+        async function testPlaceBetFunction() {
+            try {
+                const testAmount = document.getElementById('custom-bet-amount').value || '0.001';
+                const description = `Test auto ${Date.now()}`;
+
+                log(`🎲 Test placement pari: ${description}`, 'test');
+
+                const tx = await emotionBetContract.placeBet(description, {
+                    value: ethers.utils.parseEther(testAmount),
+                    gasLimit: 300000
+                });
+
+                await tx.wait();
+                addTestResult('emotionbet', 'Place Bet', true, `Hash: ${tx.hash.substring(0, 10)}...`);
+
+            } catch (error) {
+                addTestResult('emotionbet', 'Place Bet', false, error.message);
+            }
+        }
+
+        // === TESTS ATTENDANCE NFT ===
+        async function testAttendanceNFTContract() {
+            log('🧪 === TESTS ATTENDANCE NFT ===', 'test');
+            totalTests += 7;
+
+            if (!attendanceNFTContract) {
+                addTestResult('nft', 'Contract Available', false, 'Contract not connected');
+                return;
+            }
+
+            try {
+                // Test 1: Owner
+                const owner = await attendanceNFTContract.owner();
+                addTestResult('nft', 'Get Owner', true, `Owner: ${owner.substring(0, 8)}...`);
+
+                // Test 2: Total Supply
+                const totalSupply = await attendanceNFTContract.getTotalSupply();
+                addTestResult('nft', 'Get Total Supply', true, `Supply: ${totalSupply.toString()}`);
+
+                // Test 3: Next Token ID
+                const nextTokenId = await attendanceNFTContract.nextTokenId();
+                addTestResult('nft', 'Get Next Token ID', true, `Next ID: ${nextTokenId.toString()}`);
+
+                // Test 4: User NFTs
+                const userNFTs = await attendanceNFTContract.getUserNFTs(walletAddress);
+                addTestResult('nft', 'Get User NFTs', true, `NFTs: ${userNFTs.length}`);
+
+                // Test 5-7: Mint tests (si owner)
+                if (owner.toLowerCase() === walletAddress?.toLowerCase()) {
+                    await testMintAllRarities();
+                } else {
+                    addTestResult('nft', 'Mint Common', false, 'Not owner');
+                    addTestResult('nft', 'Mint Rare', false, 'Not owner');
+                    addTestResult('nft', 'Mint Epic', false, 'Not owner');
+                }
+
+            } catch (error) {
+                addTestResult('nft', 'NFT Contract Tests', false, error.message);
+            }
+        }
+
+        async function testMintAllRarities() {
+            const eventName = document.getElementById('custom-event-name').value || 'Test Event';
+            const rarities = ['Common', 'Rare', 'Epic', 'Legendary'];
+            
+            for (let rarity of rarities) {
+                try {
+                    log(`🎨 Test mint ${rarity}...`, 'test');
+                    
+                    const functionName = `mint${rarity}NFT`;
+                    const tx = await attendanceNFTContract[functionName](
+                        walletAddress,
+                        `${eventName} ${rarity}`,
+                        '2024-01-15',
+                        'test',
+                        1000
+                    );
+
+                    await tx.wait();
+                    addTestResult('nft', `Mint ${rarity}`, true, `Hash: ${tx.hash.substring(0, 10)}...`);
+
+                } catch (error) {
+                    addTestResult('nft', `Mint ${rarity}`, false, error.message);
+                }
+            }
+        }
+
+        // === TESTS D'INTÉGRATION ===
+        async function testFullIntegration() {
+            log('🧪 === TESTS INTÉGRATION COMPLÈTE ===', 'test');
+            totalTests += 8;
+
+            try {
+                // Test 1: Backend + Wallet sync
+                if (socket && walletAddress) {
+                    socket.emit('get_my_nfts');
+                    addTestResult('integration', 'Backend-Wallet Sync', true, 'Socket communication OK');
+                } else {
+                    addTestResult('integration', 'Backend-Wallet Sync', false, 'Not connected');
+                }
+
+                // Test 2: Real-time events
+                let eventReceived = false;
+                socket.on('blockchain_bet_placed', () => {
+                    eventReceived = true;
+                });
+
+                // Test 3: API + Contract consistency
+                const apiResponse = await fetch(`${CONFIG.BACKEND_URL}/api/blockchain/bets`);
+                const apiData = await apiResponse.json();
+                const contractBets = await emotionBetContract.getAllBets();
+                
+                const consistent = apiData.success && apiData.data.length === contractBets.length;
+                addTestResult('integration', 'API-Contract Consistency', consistent, 
+                    `API: ${apiData.data?.length || 0}, Contract: ${contractBets.length}`);
+
+                // Test 4: Multi-user scenario simulation
+                await testMultiUserScenario();
+
+                // Test 5: Error handling
+                try {
+                    await fetch(`${CONFIG.BACKEND_URL}/api/nonexistent`);
+                    addTestResult('integration', 'Error Handling', false, 'Should have thrown error');
+                } catch (error) {
+                    addTestResult('integration', 'Error Handling', true, 'Properly handled errors');
+                }
+
+            } catch (error) {
+                addTestResult('integration', 'Integration Tests', false, error.message);
+            }
+        }
+
+        async function testMultiUserScenario() {
+            log('👥 Test scénario multi-utilisateur...', 'test');
+            
+            try {
+                // Simuler différents utilisateurs avec différentes adresses
+                const randomAddress = ethers.Wallet.createRandom().address;
+                
+                // Test récupération NFTs pour une autre adresse
+                const response = await fetch(`${CONFIG.BACKEND_URL}/api/blockchain/nfts?address=${randomAddress}`);
+                const data = await response.json();
+                
+                addTestResult('integration', 'Multi-user NFT Query', data.success, 
+                    `NFTs for random address: ${data.data?.nfts?.length || 0}`);
+                
+            } catch (error) {
+                addTestResult('integration', 'Multi-user Test', false, error.message);
+            }
+        }
+
+        async function stressTestContracts() {
+            log('⚡ STRESS TEST DES CONTRATS...', 'test');
+            const testCount = parseInt(document.getElementById('stress-test-count').value) || 5;
+            totalTests += testCount;
+
+            for (let i = 0; i < testCount; i++) {
+                try {
+                    // Test lecture rapide
+                    const startTime = Date.now();
+                    await Promise.all([
+                        emotionBetContract.getBetCount(),
+                        attendanceNFTContract.getTotalSupply(),
+                        provider.getBalance(walletAddress)
+                    ]);
+                    const duration = Date.now() - startTime;
+                    
+                    addTestResult('integration', `Stress Test ${i + 1}`, true, `${duration}ms`);
+                    
+                } catch (error) {
+                    addTestResult('integration', `Stress Test ${i + 1}`, false, error.message);
+                }
+            }
+        }
+
+        // === FONCTIONS PRINCIPALES ===
+        async function runBasicTests() {
+            log('🚀 === LANCEMENT TESTS DE BASE ===', 'test');
+            await testBackendAPI();
+            await testWalletConnection();
+        }
+
+        async function runAllTests() {
+            log('🚀 === LANCEMENT DE TOUS LES TESTS ===', 'test');
+            resetAllTests();
+            
+            totalTests = 50; // Estimation
+            completedTests = 0;
+            updateProgress(0, 'Starting comprehensive tests...');
+
+            try {
+                await connectAllSystems();
+                await testBackendAPI();
+                await testWalletConnection();
+                await testEmotionBetContract();
+                await testAttendanceNFTContract();
+                await testFullIntegration();
+                await stressTestContracts();
+                
+                log('✅ === TOUS LES TESTS TERMINÉS! ===', 'success');
+                updateProgress(100, 'All tests completed!');
+                
+                // Générer rapport automatiquement
+                generateReport();
+                
+            } catch (error) {
+                log(`❌ Erreur pendant les tests: ${error.message}`, 'error');
+            }
+        }
+
+        function resetAllTests() {
+            // Vider tous les résultats
+            ['basic', 'emotionbet', 'nft', 'integration'].forEach(section => {
+                document.getElementById(`${section}-results`).innerHTML = '';
+            });
+            
+            // Reset variables
+            testResults = {
+                backend: { status: 'not_tested', tests: [] },
+                wallet: { status: 'not_tested', tests: [] },
+                emotionbet: { status: 'not_tested', tests: [] },
+                nft: { status: 'not_tested', tests: [] },
+                integration: { status: 'not_tested', tests: [] }
+            };
+            
+            totalTests = 0;
+            completedTests = 0;
+            updateProgress(0, 'Reset completed');
+            
+            log('🔄 Tests réinitialisés', 'info');
+        }
+
+        function generateReport() {
+            log('📊 === GÉNÉRATION DU RAPPORT ===', 'test');
+            
+            let totalTestsRun = 0;
+            let totalPassed = 0;
+            let reportHTML = '<h1>🧪 FANVERSE TEST REPORT</h1>';
+            
+            Object.keys(testResults).forEach(section => {
+                const sectionTests = testResults[section].tests;
+                const passed = sectionTests.filter(t => t.result).length;
+                const failed = sectionTests.length - passed;
+                
+                totalTestsRun += sectionTests.length;
+                totalPassed += passed;
+                
+                reportHTML += `
+                    <h2>${section.toUpperCase()}</h2>
+                    <p>✅ Passed: ${passed} | ❌ Failed: ${failed}</p>
+                    <ul>
+                `;
+                
+                sectionTests.forEach(test => {
+                    reportHTML += `<li>${test.result ? '✅' : '❌'} ${test.name}: ${test.details}</li>`;
+                });
+                
+                reportHTML += '</ul>';
+            });
+            
+            const successRate = totalTestsRun > 0 ? (totalPassed / totalTestsRun * 100).toFixed(1) : 0;
+            
+            reportHTML = `
+                <div style="font-family: Arial; background: white; color: black; padding: 20px;">
+                    <h1>🧪 FANVERSE TEST REPORT</h1>
+                    <h2>📊 RÉSUMÉ</h2>
+                    <p><strong>Tests exécutés:</strong> ${totalTestsRun}</p>
+                    <p><strong>Tests réussis:</strong> ${totalPassed}</p>
+                    <p><strong>Taux de réussite:</strong> ${successRate}%</p>
+                    <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+                    <p><strong>Wallet:</strong> ${walletAddress || 'Non connecté'}</p>
+                    ${reportHTML}
+                </div>
+            `;
+            
+            // Ouvrir dans une nouvelle fenêtre
+            const reportWindow = window.open('', '_blank');
+            reportWindow.document.write(reportHTML);
+            
+            log(`✅ Rapport généré: ${totalPassed}/${totalTestsRun} tests réussis (${successRate}%)`, 'success');
+        }
+
+        function exportResults() {
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                wallet: walletAddress,
+                contracts: {
+                    emotionBet: CONFIG.EMOTION_BET_ADDRESS,
+                    attendanceNFT: CONFIG.ATTENDANCE_NFT_ADDRESS
+                },
+                testResults,
+                totalTests: totalTestsRun,
+                passedTests: totalPassed,
+                logs: document.getElementById('logs').innerHTML
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fanverse-test-results-${Date.now()}.json`;
+            a.click();
+            
+            log('💾 Résultats exportés', 'success');
+        }
+
+        // === INITIALISATION ===
+        window.addEventListener('load', () => {
+            log('🚀 FANVERSE TEST SUITE LOADED!', 'success');
+            log('👉 Cliquez sur "Connect All" pour commencer', 'info');
+            log('👉 Ou "RUN ALL TESTS" pour tout tester automatiquement', 'info');
+        });
+
+        // Écouter les changements MetaMask
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    log('👋 Wallet déconnecté', 'warning');
+                    updateStatus('wallet', 'disconnected', 'DISCONNECTED');
+                } else {
+                    log(`🔄 Compte changé: ${accounts[0]}`, 'info');
+                    location.reload();
+                }
+            });
+
+            window.ethereum.on('chainChanged', (chainId) => {
+                log(`🌐 Réseau changé: ${chainId}`, 'info');
+                location.reload();
+            });
+        }
+    </script>
+</body>
+</html>
