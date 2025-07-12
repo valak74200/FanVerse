@@ -1,56 +1,75 @@
-"use client"
+'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { createConfig, WagmiConfig } from 'wagmi'
-import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains'
-import { http } from 'viem'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
-// Set up wagmi config - simplified version
-const config = createConfig({
-  chains: [mainnet, polygon, optimism, arbitrum],
-  transports: {
-    [mainnet.id]: http(),
-    [polygon.id]: http(),
-    [optimism.id]: http(),
-    [arbitrum.id]: http(),
-  },
-})
-
-// Create wallet context
-type WalletContextType = {
+interface WalletContextType {
   isConnected: boolean
-  address: string | undefined
-  connect: () => void
+  address: string | null
+  balance: number
+  connect: () => Promise<void>
   disconnect: () => void
 }
 
-const WalletContext = createContext({
-  isConnected: false,
-  address: undefined,
-  connect: () => {},
-  disconnect: () => {},
-})
+const WalletContext = createContext<WalletContextType | undefined>(undefined)
 
-export const useWallet = () => useContext(WalletContext)
+export function useWallet() {
+  const context = useContext(WalletContext)
+  if (context === undefined) {
+    throw new Error('useWallet must be used within a WalletProvider')
+  }
+  return context
+}
 
-export function WalletProvider({ children }: { children: React.ReactNode }) {
+interface WalletProviderProps {
+  children: ReactNode
+}
+
+export function WalletProvider({ children }: WalletProviderProps) {
   const [isConnected, setIsConnected] = useState(false)
-  const [address, setAddress] = useState(undefined)
+  const [address, setAddress] = useState<string | null>(null)
+  const [balance, setBalance] = useState(0)
 
-  // Mock functions for now - will be replaced with actual wagmi hooks in components
-  const connect = () => {
-    console.log('Connecting wallet...')
+  const connect = async () => {
+    try {
+      // Simuler la connexion au wallet
+      setIsConnected(true)
+      setAddress('0x1234...5678')
+      setBalance(1250)
+    } catch (error) {
+      console.error('Erreur de connexion au wallet:', error)
+    }
   }
 
   const disconnect = () => {
-    console.log('Disconnecting wallet...')
+    setIsConnected(false)
+    setAddress(null)
+    setBalance(0)
+  }
+
+  useEffect(() => {
+    // Vérifier si un wallet est déjà connecté au chargement
+    const savedConnection = localStorage.getItem('wallet-connected')
+    if (savedConnection === 'true') {
+      connect()
+    }
+  }, [])
+
+  useEffect(() => {
+    // Sauvegarder l'état de connexion
+    localStorage.setItem('wallet-connected', isConnected.toString())
+  }, [isConnected])
+
+  const value = {
+    isConnected,
+    address,
+    balance,
+    connect,
+    disconnect
   }
 
   return (
-    <WagmiConfig config={config}>
-      <WalletContext.Provider value={{ isConnected, address, connect, disconnect }}>
-        {children}
-      </WalletContext.Provider>
-    </WagmiConfig>
+    <WalletContext.Provider value={value}>
+      {children}
+    </WalletContext.Provider>
   )
 }
