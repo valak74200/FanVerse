@@ -8,7 +8,7 @@ import Dashboard from "./components/fanverse/chiliz/Dashboard"
 import Web3Background from "./components/fanverse/chiliz/Web3Background"
 import StadeViewer3D from "./components/fanverse/chiliz/StadeViewer3D"
 
-const textVariants = {
+const textVariants: any = {
   hidden: { opacity: 0, y: 50, scale: 0.8 },
   visible: (i: number) => ({
     opacity: 1,
@@ -22,7 +22,7 @@ const textVariants = {
   }),
 }
 
-const glowVariants = {
+const glowVariants: any = {
   initial: { scale: 0, opacity: 0 },
   animate: { 
     scale: [0, 1.2, 1], 
@@ -35,7 +35,7 @@ const glowVariants = {
   }
 }
 
-const floatingVariants = {
+const floatingVariants: any = {
   initial: { y: 0 },
   animate: {
     y: [-10, 10, -10],
