@@ -9,9 +9,9 @@ interface WeatherSystemProps {
 }
 
 export function WeatherSystem({ weather }: WeatherSystemProps) {
-  const weatherRef = useRef<THREE.Group>(null)
-  const rainRef = useRef<THREE.Group>(null)
-  const snowRef = useRef<THREE.Group>(null)
+  const weatherRef = useRef(null)
+  const rainRef = useRef(null)
+  const snowRef = useRef(null)
 
   useFrame(() => {
     // Animate rain
@@ -46,48 +46,50 @@ export function WeatherSystem({ weather }: WeatherSystemProps) {
 
   return (
     <group ref={weatherRef}>
-      {/* Rain Effect */}
+      {/* Rain Effect - Reduced count for performance */}
       {weather === 'rain' && (
         <group ref={rainRef}>
-          {Array.from({ length: 2000 }).map((_, i) => (
+          {Array.from({ length: 500 }).map((_, i) => (
             <mesh
               key={i}
               position={[
                 (Math.random() - 0.5) * 120,
                 Math.random() * 65 + 20,
                 (Math.random() - 0.5) * 120
-              ]}
+              ] as any}
             >
               <cylinderGeometry args={[0.01, 0.01, 1]} />
-              <meshStandardMaterial
-                color="#87ceeb"
-                transparent
-                opacity={0.6}
-                emissive="#87ceeb"
-                emissiveIntensity={0.1}
+              <meshBasicMaterial
+                {...{
+                  color: "#87ceeb",
+                  transparent: true,
+                  opacity: 0.6
+                } as any}
               />
             </mesh>
           ))}
         </group>
       )}
 
-      {/* Snow Effect */}
+      {/* Snow Effect - Reduced count for performance */}
       {weather === 'snow' && (
         <group ref={snowRef}>
-          {Array.from({ length: 1000 }).map((_, i) => (
+          {Array.from({ length: 300 }).map((_, i) => (
             <mesh
               key={i}
               position={[
                 (Math.random() - 0.5) * 120,
                 Math.random() * 65 + 20,
                 (Math.random() - 0.5) * 120
-              ]}
+              ] as any}
             >
               <sphereGeometry args={[0.1]} />
-              <meshStandardMaterial
-                color="#ffffff"
-                transparent
-                opacity={0.8}
+              <meshBasicMaterial
+                {...{
+                  color: "#ffffff",
+                  transparent: true,
+                  opacity: 0.8
+                } as any}
               />
             </mesh>
           ))}
@@ -96,14 +98,9 @@ export function WeatherSystem({ weather }: WeatherSystemProps) {
 
       {/* Fog Effect */}
       {weather === 'fog' && (
-        <mesh position={[0, 10, 0]}>
+        <mesh position={[0, 10, 0] as any}>
           <sphereGeometry args={[80, 32, 32]} />
-          <meshStandardMaterial
-            color="#cccccc"
-            transparent
-            opacity={0.3}
-            side={THREE.DoubleSide}
-          />
+          <meshBasicMaterial args={[{ color: "#cccccc", transparent: true, opacity: 0.3, side: THREE.DoubleSide }]} />
         </mesh>
       )}
     </group>

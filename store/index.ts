@@ -1,26 +1,21 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux'
-import stadiumReducer from './slices/stadiumSlice'
-import userReducer from './slices/userSlice'
-import emotionReducer from './slices/emotionSlice'
+import emotionSlice from './slices/emotionSlice'
+import userSlice from './slices/userSlice'
+import stadiumSlice from './slices/stadiumSlice'
 
 export const store = configureStore({
   reducer: {
-    stadium: stadiumReducer,
-    user: userReducer,
-    emotion: emotionReducer,
+    emotion: emotionSlice,
+    user: userSlice,
+    stadium: stadiumSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['stadium/updateCameraPosition'],
-        ignoredPaths: ['stadium.cameraPosition'],
+        ignoredActions: ['persist/PERSIST'],
       },
     }),
 })
 
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
-
-export const useAppDispatch = () => useDispatch<AppDispatch>()
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector

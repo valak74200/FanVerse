@@ -11,7 +11,7 @@ interface WebXRManagerProps {
 export function WebXRManager({ isVRActive, onVRStateChange }: WebXRManagerProps) {
   const { gl } = useThree()
   const [isVRSupported, setIsVRSupported] = useState(false)
-  const [vrSession, setVRSession] = useState<XRSession | null>(null)
+  const [vrSession, setVRSession] = useState(null)
 
   useEffect(() => {
     // Safely check WebXR support with proper error handling
@@ -114,13 +114,13 @@ export function VRTeleportation() {
       {teleportPoints.map((point, index) => (
         <mesh
           key={index}
-          position={[point.x, point.y, point.z]}
+          position={[point.x, point.y, point.z] as any}
           onClick={() => {
             console.log(`Teleporting to: ${point.label}`)
           }}
         >
           <cylinderGeometry args={[1, 1, 0.1]} />
-          <meshStandardMaterial color="#3b82f6" transparent opacity={0.6} emissive="#3b82f6" emissiveIntensity={0.3} />
+          <meshStandardMaterial {...({ color: "#3b82f6", transparent: true, opacity: 0.6, emissive: "#3b82f6", emissiveIntensity: 0.3 } as any)} />
         </mesh>
       ))}
     </group>

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Slider } from '@/components/ui/slider'
 import { Badge } from '@/components/ui/badge'
-import { useAppSelector, useAppDispatch } from '@/store'
+import { useAppSelector, useAppDispatch } from '@/hooks/redux'
 import { 
   setViewMode, 
   setWeather, 
@@ -87,7 +87,7 @@ export function StadiumControls() {
           
           <div className="flex items-center space-x-2">
             <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-              {spectatorCount.toLocaleString()} fans
+              {spectatorCount.toLocaleString('en-US')} fans
             </Badge>
             
             <Button

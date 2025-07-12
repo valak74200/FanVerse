@@ -47,7 +47,7 @@ interface NFTMomentsProps {
 }
 
 export function NFTMoments({ onMomentCapture, matchEvents }: NFTMomentsProps) {
-  const [moments, setMoments] = useState<NFTMoment[]>([
+  const [moments, setMoments] = useState([
     {
       id: "mbappe-goal-67",
       title: "Mbappé's Lightning Strike",
@@ -146,11 +146,11 @@ export function NFTMoments({ onMomentCapture, matchEvents }: NFTMomentsProps) {
     },
   ])
 
-  const [selectedMoment, setSelectedMoment] = useState<NFTMoment | null>(null)
+  const [selectedMoment, setSelectedMoment] = useState(null)
   const [isCapturing, setIsCapturing] = useState(false)
   const [captureProgress, setCaptureProgress] = useState(0)
-  const [filter, setFilter] = useState<"all" | "owned" | "marketplace">("all")
-  const [rarityFilter, setRarityFilter] = useState<string>("all")
+  const [filter, setFilter] = useState("all")
+  const [rarityFilter, setRarityFilter] = useState("all")
 
   const rarityColors = {
     Common: "from-gray-400 to-gray-600",

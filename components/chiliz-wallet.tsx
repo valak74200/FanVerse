@@ -171,7 +171,7 @@ export function ChilizWallet({ onBalanceChange }: ChilizWalletProps) {
                 >
                   {token}
                 </div>
-                <span className="text-white font-medium">{amount.toFixed(1)}</span>
+                <span className="text-white font-medium">{(amount as number).toFixed(1)}</span>
               </div>
               <div className="text-right">
                 <div className="text-green-400 text-sm">+2.4%</div>

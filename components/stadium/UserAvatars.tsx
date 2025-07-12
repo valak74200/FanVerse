@@ -11,7 +11,7 @@ interface UserAvatarsProps {
 }
 
 export function UserAvatars({ users }: UserAvatarsProps) {
-  const avatarsRef = useRef<THREE.Group>(null)
+  const avatarsRef = useRef(null)
 
   useFrame((state) => {
     if (!avatarsRef.current) return
@@ -24,121 +24,90 @@ export function UserAvatars({ users }: UserAvatarsProps) {
       if (!user) return
 
       // Floating animation
-      avatarGroup.position.y = user.avatar.position[1] + Math.sin(time + i) * 0.5
+      avatarGroup.position.y = 5 + Math.sin(time + i) * 0.5
 
-      // Rotation based on animation state
-      switch (user.avatar.animation) {
-        case 'cheer':
-          avatarGroup.rotation.y = Math.sin(time * 4 + i) * 0.3
-          avatarGroup.scale.setScalar(1.1 + Math.sin(time * 8 + i) * 0.1)
-          break
-        case 'wave':
-          avatarGroup.rotation.z = Math.sin(time * 6 + i) * 0.2
-          break
-        case 'jump':
-          avatarGroup.position.y += Math.abs(Math.sin(time * 8 + i)) * 2
-          break
-        case 'dance':
-          avatarGroup.rotation.y = time * 2 + i
-          avatarGroup.rotation.z = Math.sin(time * 4 + i) * 0.1
-          break
-        default:
-          // Idle animation
-          avatarGroup.rotation.y = Math.sin(time * 0.5 + i) * 0.1
-      }
+      // Simple idle animation
+      avatarGroup.rotation.y = Math.sin(time * 0.5 + i) * 0.1
     })
   })
 
+  // Generate deterministic positions for users (based on index to avoid hydration errors)
+  const getUserPosition = (index: number): [number, number, number] => {
+    const angle = (index / users.length) * Math.PI * 2
+    const radius = 35 + (index % 10) // Déterministe basé sur l'index
+    return [
+      Math.cos(angle) * radius,
+      5,
+      Math.sin(angle) * radius
+    ]
+  }
+
+  // Generate colors based on user ID
+  const getUserColors = (userId: string) => {
+    const hash = userId.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0)
+      return a & a
+    }, 0)
+    
+    const hue = Math.abs(hash) % 360
+    return {
+      primary: `hsl(${hue}, 70%, 50%)`,
+      secondary: `hsl(${hue + 30}, 60%, 40%)`,
+      accent: `hsl(${hue + 60}, 80%, 60%)`
+    }
+  }
+
   return (
     <group ref={avatarsRef}>
-      {users.map((user, index) => (
-        <group
-          key={user.id}
-          position={user.avatar.position}
-        >
-          {/* Avatar Body */}
-          <mesh castShadow>
-            <capsuleGeometry args={[0.5, 1.5]} />
-            <meshStandardMaterial
-              color={user.avatar.colors.primary}
-              roughness={0.7}
-              metalness={0.1}
-            />
-          </mesh>
-
-          {/* Avatar Head */}
-          <mesh position={[0, 1.2, 0]} castShadow>
-            <sphereGeometry args={[0.3]} />
-            <meshStandardMaterial
-              color={user.avatar.colors.secondary}
-              roughness={0.8}
-            />
-          </mesh>
-
-          {/* Team Badge */}
-          <mesh position={[0, 0.5, 0.51]}>
-            <circleGeometry args={[0.2]} />
-            <meshStandardMaterial
-              color={user.avatar.colors.accent}
-              emissive={user.avatar.colors.accent}
-              emissiveIntensity={0.2}
-            />
-          </mesh>
-
-          {/* Username Billboard */}
-          <Billboard position={[0, 2.5, 0]}>
-            <Text
-              fontSize={0.3}
-              color="#ffffff"
-              anchorX="center"
-              anchorY="middle"
-              outlineWidth={0.02}
-              outlineColor="#000000"
-            >
-              {user.username}
-            </Text>
-          </Billboard>
-
-          {/* VIP Crown */}
-          {user.isVip && (
-            <mesh position={[0, 1.8, 0]}>
-              <coneGeometry args={[0.2, 0.3]} />
-              <meshStandardMaterial
-                color="#ffd700"
-                emissive="#ffd700"
-                emissiveIntensity={0.3}
-              />
+      {users.map((user, index) => {
+        const position = getUserPosition(index)
+        const colors = getUserColors(user.id)
+        
+        return (
+          <group
+            key={user.id}
+            position={position as any}
+          >
+            {/* Avatar Body */}
+            <mesh position={[0, 1.2, 0] as any} castShadow>
+              <capsuleGeometry args={[0.5, 1.5]} />
+              <meshBasicMaterial args={[{ color: colors.primary }]} />
             </mesh>
-          )}
 
-          {/* Online Status Indicator */}
-          {user.isOnline && (
-            <mesh position={[0.4, 1.5, 0]}>
+            {/* Avatar Head */}
+            <mesh position={[0, 2.4, 0] as any} castShadow>
+              <sphereGeometry args={[0.3]} />
+              <meshBasicMaterial args={[{ color: colors.secondary }]} />
+            </mesh>
+
+            {/* Team Badge */}
+            <mesh position={[0, 1.7, 0.51] as any}>
+              <circleGeometry args={[0.2]} />
+              <meshBasicMaterial args={[{ color: colors.accent }]} />
+            </mesh>
+
+            {/* Username Billboard */}
+            <Billboard position={[0, 3.5, 0]}>
+              <Text
+                fontSize={0.3}
+                color="#ffffff"
+                anchorX="center"
+                anchorY="middle"
+                outlineWidth={0.02}
+                outlineColor="#000000"
+              >
+                {user.name}
+              </Text>
+            </Billboard>
+
+            {/* Activity Indicator */}
+            <mesh position={[0.4, 2.7, 0] as any}>
               <sphereGeometry args={[0.1]} />
-              <meshStandardMaterial
-                color="#00ff00"
-                emissive="#00ff00"
-                emissiveIntensity={0.5}
-              />
+              <meshBasicMaterial args={[{ color: "#00ff00" }]} />
             </mesh>
-          )}
-
-          {/* Accessories */}
-          {user.avatar.accessories.map((accessory, accIndex) => (
-            <mesh
-              key={accIndex}
-              position={[
-                Math.cos(accIndex) * 0.6,
-                0.8 + accIndex * 0.2,
-                Math.sin(accIndex) * 0.6
-              ]}
-            >
-              <boxGeometry args={[0.1, 0.1, 0.1]} />
-              <meshStandardMaterial color={user.avatar.colors.accent} />
-            </mesh>
-          ))}
-        </group>
-      ))}
+          </group>
+        )
+      })}
     </group>
   )
 }

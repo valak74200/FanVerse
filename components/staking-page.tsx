@@ -268,4 +268,52 @@ export function StakingPage() {
                       {percent}
                     </Button>
                   ))}
-                \
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Available Balance:</span>
+                    <span className="text-white">1,000 CHZ</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Estimated Rewards:</span>
+                    <span className="text-green-400">
+                      {stakeAmount ? `${(Number(stakeAmount) * 0.125).toFixed(2)} CHZ/year` : "0 CHZ/year"}
+                    </span>
+                  </div>
+                </div>
+
+                <Button className="w-full bg-gradient-to-r from-chiliz-red to-chiliz-orange hover:from-chiliz-red/80 hover:to-chiliz-orange/80">
+                  Stake Tokens
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="text-white">Unstake Tokens</CardTitle>
+              <p className="text-gray-400 text-sm">Withdraw your staked tokens</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Lock className="w-4 h-4 text-yellow-400" />
+                    <span className="text-yellow-400 text-sm">
+                      Unstaking period: 7 days
+                    </span>
+                  </div>
+                </div>
+
+                <Button variant="outline" className="w-full">
+                  Unstake Tokens
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+}

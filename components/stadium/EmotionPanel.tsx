@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { useAppSelector, useAppDispatch } from '@/store'
-import { triggerEmotion, EmotionType } from '@/store/slices/emotionSlice'
+import { useAppSelector, useAppDispatch } from '@/hooks/redux'
+import { triggerEmotion } from '@/store/slices/emotionSlice'
 import { incrementReactionCount, updateFavoriteEmotion } from '@/store/slices/userSlice'
 import { useWebSocket } from '@/hooks/useWebSocket'
+
+type EmotionType = 'hype' | 'joy' | 'anger' | 'sadness' | 'surprise' | 'fear'
 import { 
   Flame, 
   Zap, 
@@ -22,33 +24,6 @@ import {
 
 const emotions = [
   {
-    type: 'rage' as EmotionType,
-    label: 'RAGE',
-    icon: Flame,
-    color: 'from-red-600 to-red-800',
-    hoverColor: 'from-red-500 to-red-700',
-    emoji: '😡',
-    description: 'Express your anger and frustration'
-  },
-  {
-    type: 'shock' as EmotionType,
-    label: 'SHOCK',
-    icon: Zap,
-    color: 'from-yellow-500 to-orange-600',
-    hoverColor: 'from-yellow-400 to-orange-500',
-    emoji: '😱',
-    description: 'Show your surprise and amazement'
-  },
-  {
-    type: 'love' as EmotionType,
-    label: 'LOVE',
-    icon: Heart,
-    color: 'from-pink-500 to-red-500',
-    hoverColor: 'from-pink-400 to-red-400',
-    emoji: '😍',
-    description: 'Share the love for great plays'
-  },
-  {
     type: 'hype' as EmotionType,
     label: 'HYPE',
     icon: TrendingUp,
@@ -58,22 +33,49 @@ const emotions = [
     description: 'Get hyped for exciting moments'
   },
   {
-    type: 'boring' as EmotionType,
-    label: 'BORING',
-    icon: Meh,
-    color: 'from-gray-500 to-gray-700',
-    hoverColor: 'from-gray-400 to-gray-600',
-    emoji: '😴',
-    description: 'Express when the game is dull'
+    type: 'joy' as EmotionType,
+    label: 'JOY',
+    icon: Heart,
+    color: 'from-pink-500 to-red-500',
+    hoverColor: 'from-pink-400 to-red-400',
+    emoji: '😍',
+    description: 'Share the joy for great plays'
   },
   {
-    type: 'sad' as EmotionType,
-    label: 'SAD',
+    type: 'anger' as EmotionType,
+    label: 'ANGER',
+    icon: Flame,
+    color: 'from-red-600 to-red-800',
+    hoverColor: 'from-red-500 to-red-700',
+    emoji: '😡',
+    description: 'Express your anger and frustration'
+  },
+  {
+    type: 'sadness' as EmotionType,
+    label: 'SADNESS',
     icon: Frown,
     color: 'from-blue-600 to-indigo-700',
     hoverColor: 'from-blue-500 to-indigo-600',
     emoji: '😢',
     description: 'Show disappointment'
+  },
+  {
+    type: 'surprise' as EmotionType,
+    label: 'SURPRISE',
+    icon: Zap,
+    color: 'from-yellow-500 to-orange-600',
+    hoverColor: 'from-yellow-400 to-orange-500',
+    emoji: '😱',
+    description: 'Show your surprise and amazement'
+  },
+  {
+    type: 'fear' as EmotionType,
+    label: 'FEAR',
+    icon: Meh,
+    color: 'from-gray-500 to-gray-700',
+    hoverColor: 'from-gray-400 to-gray-600',
+    emoji: '😰',
+    description: 'Express fear and anxiety'
   }
 ]
 
@@ -81,7 +83,7 @@ export function EmotionPanel() {
   const dispatch = useAppDispatch()
   const { emitEmotion } = useWebSocket()
   const [cooldownTime, setCooldownTime] = useState(0)
-  const [selectedEmotion, setSelectedEmotion] = useState<EmotionType | null>(null)
+  const [selectedEmotion, setSelectedEmotion] = useState(null)
 
   const { 
     emotions: emotionData, 

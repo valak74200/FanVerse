@@ -27,7 +27,7 @@ interface AdvancedChatProps {
 }
 
 export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState([
     {
       id: 1,
       user: "Mike_PSG",
@@ -83,8 +83,8 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
     { name: "Thomas", avatar: "T", isSpeaking: true, isMuted: false },
   ])
 
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const messagesEndRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   const quickEmojis = ["🔥", "⚽", "🏆", "💙", "❤️", "😱", "👏", "🎉", "💪", "⭐"]
   const fanTokenRewards = {

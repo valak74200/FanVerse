@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Bell, Search, User, Wallet, ChevronDown } from "lucide-react"
+import { Bell, Search, Users, Wallet, ChevronDown } from "lucide-react"
 
 export function DashboardHeader() {
   return (
@@ -60,7 +60,7 @@ export function DashboardHeader() {
           {/* Profile */}
           <Button variant="ghost" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-r from-chiliz-red to-chiliz-orange rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
+              <Users className="w-4 h-4 text-white" />
             </div>
             <span className="hidden md:block text-white">0x1234...5678</span>
             <ChevronDown className="w-4 h-4" />

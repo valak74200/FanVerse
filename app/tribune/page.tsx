@@ -7,17 +7,30 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { RealisticStadium3D } from "@/components/realistic-stadium-3d"
+import dynamic from "next/dynamic"
 import { ChilizWallet } from "@/components/chiliz-wallet"
 import { NavigationMenu } from "@/components/navigation-menu"
 import { GroupManagement } from "@/components/group-management"
 import { AdvancedChat } from "@/components/advanced-chat"
 import { BettingCards } from "@/components/betting-cards"
-import { EmotionPanel } from "@/components/emotion-panel"
+import { EmotionPanel } from "@/components/stadium/EmotionPanel"
 import { Users, Clock, Wallet, Camera, Volume2, Sun, Cloud, Zap, Menu, X, Maximize, Minimize } from "lucide-react"
 import { NFTMoments } from "@/components/nft-moments"
 import { NFTMarketplace } from "@/components/nft-marketplace"
 import { NFTCollection } from "@/components/nft-collection"
+
+// Charger VirtualStadium uniquement côté client
+const VirtualStadium = dynamic(() => import('@/components/stadium/VirtualStadium').then(mod => ({ default: mod.VirtualStadium })), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-black">
+      <div className="text-white text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+        <p>Chargement du stade virtuel...</p>
+      </div>
+    </div>
+  )
+})
 
 export default function TribuneDashboard() {
   const [activeSection, setActiveSection] = useState("stadium")
@@ -27,7 +40,7 @@ export default function TribuneDashboard() {
   const [crowdVolume, setCrowdVolume] = useState(75)
   const [collectiveEmotion, setCollectiveEmotion] = useState(65)
   const [showCollectiveMoment, setShowCollectiveMoment] = useState(false)
-  const [selectedGroup, setSelectedGroup] = useState<string | null>("psg-ultras")
+  const [selectedGroup, setSelectedGroup] = useState("psg-ultras")
   const [notifications, setNotifications] = useState(5)
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -139,12 +152,7 @@ export default function TribuneDashboard() {
 
             {/* Stade 3D */}
             <div className={`flex-1 relative ${isFullscreen ? "fixed inset-0 z-50 bg-black" : ""}`}>
-              <RealisticStadium3D
-                cameraView={cameraView}
-                weather={weather}
-                crowdVolume={crowdVolume}
-                matchData={matchData}
-              />
+              <VirtualStadium />
 
               {/* Popup moment collectif */}
               {showCollectiveMoment && (
@@ -177,7 +185,7 @@ export default function TribuneDashboard() {
                   </div>
                   <Progress value={collectiveEmotion} className="h-3" />
                 </div>
-                <EmotionPanel onEmotionClick={handleEmotionClick} />
+                <EmotionPanel />
               </Card>
             )}
           </div>

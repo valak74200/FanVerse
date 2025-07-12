@@ -33,7 +33,7 @@ export function GroupManagement({ onGroupSelect, selectedGroup }: GroupManagemen
   const [isVoiceChatEnabled, setIsVoiceChatEnabled] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
 
-  const [groups, setGroups] = useState<Group[]>([
+  const [groups, setGroups] = useState([
     {
       id: "psg-ultras",
       name: "PSG Ultras",
@@ -41,7 +41,7 @@ export function GroupManagement({ onGroupSelect, selectedGroup }: GroupManagemen
       members: 47,
       maxMembers: 100,
       isPrivate: false,
-      level: "Diamond",
+      level: "Diamond" as const,
       avatar: "🔵",
       owner: "Alex",
       isJoined: true,
@@ -55,7 +55,7 @@ export function GroupManagement({ onGroupSelect, selectedGroup }: GroupManagemen
       members: 38,
       maxMembers: 75,
       isPrivate: false,
-      level: "Gold",
+      level: "Gold" as const,
       avatar: "🔴",
       owner: "Maria",
       isJoined: false,
@@ -69,7 +69,7 @@ export function GroupManagement({ onGroupSelect, selectedGroup }: GroupManagemen
       members: 15,
       maxMembers: 25,
       isPrivate: true,
-      level: "Diamond",
+      level: "Diamond" as const,
       avatar: "💎",
       owner: "Thomas",
       isJoined: true,
@@ -83,7 +83,7 @@ export function GroupManagement({ onGroupSelect, selectedGroup }: GroupManagemen
       members: 156,
       maxMembers: 200,
       isPrivate: false,
-      level: "Silver",
+      level: "Silver" as const,
       avatar: "⚽",
       owner: "Sophie",
       isJoined: false,

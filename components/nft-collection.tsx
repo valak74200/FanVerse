@@ -26,7 +26,7 @@ interface CollectionStats {
 }
 
 export function NFTCollection() {
-  const [stats] = useState<CollectionStats>({
+  const [stats] = useState({
     totalNFTs: 23,
     totalValue: 1847,
     rarityBreakdown: {
@@ -197,9 +197,9 @@ export function NFTCollection() {
                   <div key={team}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-gray-300">{team}</span>
-                      <span className="text-sm font-semibold text-white">{count}</span>
+                      <span className="text-sm font-semibold text-white">{String(count)}</span>
                     </div>
-                    <Progress value={(count / stats.totalNFTs) * 100} className="h-2" />
+                    <Progress value={(Number(count) / Number(stats.totalNFTs)) * 100} className="h-2" />
                   </div>
                 ))}
               </div>

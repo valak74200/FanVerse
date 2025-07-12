@@ -2,9 +2,10 @@
 
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { useAppSelector } from '@/store'
-import { EmotionType } from '@/store/slices/emotionSlice'
+import { useAppSelector } from '@/hooks/redux'
 import * as THREE from 'three'
+
+type EmotionType = 'hype' | 'joy' | 'anger' | 'sadness' | 'surprise' | 'fear'
 
 interface CrowdSystemProps {
   density: number
@@ -23,7 +24,7 @@ interface SpectatorData {
 }
 
 export function CrowdSystem({ density, activeEmotion, isAnimating, performance }: CrowdSystemProps) {
-  const crowdRef = useRef<THREE.Group>(null)
+  const crowdRef = useRef(null)
   const { emotions } = useAppSelector(state => state.emotion)
 
   // Generate spectator positions based on performance and density
@@ -90,19 +91,19 @@ export function CrowdSystem({ density, activeEmotion, isAnimating, performance }
           case 'hype':
             emotionHeight = Math.sin(time * 8 + waveOffset) * emotionData.intensity * 2
             break
-          case 'rage':
+          case 'anger':
             emotionHeight = Math.sin(time * 12 + waveOffset) * emotionData.intensity * 1.5
             break
-          case 'love':
+          case 'joy':
             emotionHeight = Math.sin(time * 4 + waveOffset) * emotionData.intensity * 1
             break
-          case 'shock':
+          case 'surprise':
             emotionHeight = Math.random() * emotionData.intensity * 3
             break
-          case 'sad':
+          case 'sadness':
             emotionHeight = -emotionData.intensity * 0.5
             break
-          case 'boring':
+          case 'fear':
             emotionHeight = Math.sin(time * 0.5 + waveOffset) * emotionData.intensity * 0.2
             break
         }
@@ -112,9 +113,9 @@ export function CrowdSystem({ density, activeEmotion, isAnimating, performance }
       mesh.position.y = spectator.baseY + waveHeight * emotionMultiplier + emotionHeight
 
       // Rotation based on emotion
-      if (activeEmotion === 'hype' || activeEmotion === 'love') {
+      if (activeEmotion === 'hype' || activeEmotion === 'joy') {
         mesh.rotation.y = Math.sin(time * 4 + waveOffset) * 0.3
-      } else if (activeEmotion === 'rage') {
+      } else if (activeEmotion === 'anger') {
         mesh.rotation.y = Math.sin(time * 8 + waveOffset) * 0.5
       }
 
@@ -124,12 +125,23 @@ export function CrowdSystem({ density, activeEmotion, isAnimating, performance }
     })
   })
 
-  // Get team colors
-  const getTeamColor = (team: SpectatorData['team']) => {
+  // Shared materials to reduce texture units
+  const psgMaterial = useMemo(() => new (THREE as any).MeshBasicMaterial({ 
+    color: '#003f7f' 
+  }), [])
+  const barcaMaterial = useMemo(() => new (THREE as any).MeshBasicMaterial({ 
+    color: '#a50044' 
+  }), [])
+  const neutralMaterial = useMemo(() => new (THREE as any).MeshBasicMaterial({ 
+    color: '#666666' 
+  }), [])
+
+  // Get team material
+  const getTeamMaterial = (team: SpectatorData['team']) => {
     switch (team) {
-      case 'PSG': return '#003f7f'
-      case 'BARCA': return '#a50044'
-      default: return '#666666'
+      case 'PSG': return psgMaterial
+      case 'BARCA': return barcaMaterial
+      default: return neutralMaterial
     }
   }
 
@@ -139,15 +151,11 @@ export function CrowdSystem({ density, activeEmotion, isAnimating, performance }
         <mesh
           key={i}
           position={spectator.position}
-          castShadow
-          receiveShadow
+          material={getTeamMaterial(spectator.team)}
+          castShadow={performance !== 'low'}
+          receiveShadow={performance !== 'low'}
         >
           <boxGeometry args={[0.3, 1.2, 0.3]} />
-          <meshStandardMaterial 
-            color={getTeamColor(spectator.team)}
-            roughness={0.8}
-            metalness={0.1}
-          />
         </mesh>
       ))}
     </group>

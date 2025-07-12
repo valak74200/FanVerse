@@ -14,7 +14,7 @@ interface Particle {
 }
 
 export function AnimatedBackground() {
-  const [particles, setParticles] = useState<Particle[]>([])
+  const [particles, setParticles] = useState([])
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   useEffect(() => {

@@ -18,7 +18,7 @@ export interface StadiumState {
 
 const initialState: StadiumState = {
   isLoaded: false,
-  cameraPosition: [0, 50, 100],
+  cameraPosition: [0, 80, 150],
   cameraTarget: [0, 0, 0],
   viewMode: 'overview',
   weather: 'clear',
@@ -49,23 +49,23 @@ const stadiumSlice = createSlice({
       // Update camera position based on view mode
       switch (action.payload) {
         case 'overview':
-          state.cameraPosition = [0, 50, 100]
+          state.cameraPosition = [0, 80, 150]
           state.cameraTarget = [0, 0, 0]
           break
         case 'field':
-          state.cameraPosition = [0, 5, 30]
+          state.cameraPosition = [0, 25, 60]
           state.cameraTarget = [0, 0, 0]
           break
         case 'stands':
-          state.cameraPosition = [40, 20, 40]
+          state.cameraPosition = [50, 35, 50]
           state.cameraTarget = [0, 0, 0]
           break
         case 'vip':
-          state.cameraPosition = [0, 25, 50]
+          state.cameraPosition = [0, 40, 80]
           state.cameraTarget = [0, 0, 0]
           break
         case 'aerial':
-          state.cameraPosition = [0, 100, 0]
+          state.cameraPosition = [0, 120, 0]
           state.cameraTarget = [0, 0, 0]
           break
       }

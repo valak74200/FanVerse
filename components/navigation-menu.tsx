@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import {
-  Home,
   Users,
   MessageCircle,
   Trophy,
@@ -21,6 +20,7 @@ import {
   ShoppingCart,
   Wallet,
   BarChart3,
+  Home,
 } from "lucide-react"
 
 interface NavigationMenuProps {

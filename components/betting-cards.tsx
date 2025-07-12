@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Clock, TrendingUp, Target } from "lucide-react"
+import { Timer, TrendingUp, Target } from "lucide-react"
 
 interface BetOption {
   id: string
@@ -16,7 +16,7 @@ interface BetOption {
 }
 
 export function BettingCards() {
-  const [bets, setBets] = useState<BetOption[]>([
+  const [bets, setBets] = useState([
     {
       id: "first-goal",
       title: "First Goal: Mbappé vs Messi",
@@ -73,7 +73,7 @@ export function BettingCards() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-sm">{bet.title}</h3>
             <Badge variant="outline" className="text-orange-400 border-orange-400">
-              <Clock className="w-3 h-3 mr-1" />
+              <Timer className="w-3 h-3 mr-1" />
               {bet.timeLeft.minutes}:{bet.timeLeft.seconds.toString().padStart(2, "0")}
             </Badge>
           </div>

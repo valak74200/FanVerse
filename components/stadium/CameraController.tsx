@@ -18,27 +18,47 @@ export function CameraController({
   viewMode, 
   onPositionChange 
 }: CameraControllerProps) {
-  const cameraRef = useRef<THREE.PerspectiveCamera>(null)
-  const targetRef = useRef<THREE.Vector3>(new THREE.Vector3(...target))
+  const cameraRef = useRef(null)
+  const targetRef = useRef(new THREE.Vector3(...target))
   const { camera } = useThree()
+  const isTransitioning = useRef(false)
+  const targetPosition = useRef(new THREE.Vector3(...position))
 
-  // Smooth camera transitions
+  // Smooth camera transitions only when view mode changes
   useFrame((state, delta) => {
     if (!cameraRef.current) return
 
-    const targetPosition = new THREE.Vector3(...position)
-    const targetLookAt = new THREE.Vector3(...target)
+    // Only transition if we're actively transitioning
+    if (isTransitioning.current) {
+      const currentPos = cameraRef.current.position
+      const targetPos = targetPosition.current
+      const targetLookAt = targetRef.current
 
-    // Smooth interpolation
-    cameraRef.current.position.lerp(targetPosition, delta * 2)
-    targetRef.current.lerp(targetLookAt, delta * 2)
-    cameraRef.current.lookAt(targetRef.current)
+      // Check if we're close enough to stop transitioning
+      const distance = currentPos.distanceTo(targetPos)
+      if (distance < 0.1) {
+        isTransitioning.current = false
+        return
+      }
 
-    // Notify parent of position changes
-    if (onPositionChange) {
-      onPositionChange(cameraRef.current.position)
+      // Smooth interpolation only during transitions
+      currentPos.lerp(targetPos, delta * 2)
+      cameraRef.current.lookAt(targetLookAt)
+
+      // Notify parent of position changes
+      if (onPositionChange) {
+        onPositionChange(currentPos)
+      }
     }
   })
+
+  useEffect(() => {
+    // Trigger transition when position changes
+    if (cameraRef.current) {
+      targetPosition.current.set(...position)
+      isTransitioning.current = true
+    }
+  }, [position])
 
   useEffect(() => {
     targetRef.current.set(...target)

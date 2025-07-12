@@ -12,11 +12,11 @@ interface VRStadiumExperienceProps {
 
 export function VRStadiumExperience({ matchTime, collectiveEmotion }: VRStadiumExperienceProps) {
   const [vrPosition, setVrPosition] = useState(new THREE.Vector3(0, 5, -30))
-  const scoreboardRef = useRef<THREE.Group>(null)
+  const scoreboardRef = useRef(null)
 
   // VR-specific stadium enhancements
   const VRScoreboard = () => (
-    <group ref={scoreboardRef} position={[0, 20, -52]}>
+    <group ref={scoreboardRef} position={[0, 20, -52] as any}>
       <mesh>
         <planeGeometry args={[20, 8]} />
         <meshStandardMaterial color="#000000" emissive="#001122" emissiveIntensity={0.2} />
@@ -24,7 +24,7 @@ export function VRStadiumExperience({ matchTime, collectiveEmotion }: VRStadiumE
 
       {/* Match Info */}
       <Text
-        position={[0, 2, 0.1]}
+        position={[0, 2, 0.1] as any}
         fontSize={1.5}
         color="#ffffff"
         anchorX="center"
@@ -35,12 +35,12 @@ export function VRStadiumExperience({ matchTime, collectiveEmotion }: VRStadiumE
       </Text>
 
       {/* Timer */}
-      <Text position={[0, 0, 0.1]} fontSize={1} color="#00ff00" anchorX="center" anchorY="middle">
+      <Text position={[0, 0, 0.1] as any} fontSize={1} color="#00ff00" anchorX="center" anchorY="middle">
         {matchTime.minutes}:{matchTime.seconds.toString().padStart(2, "0")}
       </Text>
 
       {/* Collective Emotion Meter */}
-      <Text position={[0, -2, 0.1]} fontSize={0.8} color="#3b82f6" anchorX="center" anchorY="middle">
+      <Text position={[0, -2, 0.1] as any} fontSize={0.8} color="#3b82f6" anchorX="center" anchorY="middle">
         CROWD ENERGY: {collectiveEmotion}%
       </Text>
     </group>
@@ -48,7 +48,7 @@ export function VRStadiumExperience({ matchTime, collectiveEmotion }: VRStadiumE
 
   // VR Crowd Atmosphere
   const VRCrowdEffects = () => {
-    const crowdSoundRef = useRef<THREE.Group>(null)
+    const crowdSoundRef = useRef(null)
 
     useFrame(() => {
       if (crowdSoundRef.current) {
@@ -71,14 +71,16 @@ export function VRStadiumExperience({ matchTime, collectiveEmotion }: VRStadiumE
           const z = Math.sin(angle) * 45
 
           return (
-            <mesh key={i} position={[x, 10, z]}>
+            <mesh key={i} position={[x, 10, z] as any}>
               <sphereGeometry args={[0.5]} />
               <meshStandardMaterial
-                color="#3b82f6"
-                transparent
-                opacity={0.3 + (collectiveEmotion / 100) * 0.4}
-                emissive="#3b82f6"
-                emissiveIntensity={collectiveEmotion / 200}
+                {...({
+                  color: "#3b82f6",
+                  transparent: true,
+                  opacity: 0.3 + (collectiveEmotion / 100) * 0.4,
+                  emissive: "#3b82f6",
+                  emissiveIntensity: collectiveEmotion / 200
+                } as any)}
               />
             </mesh>
           )
@@ -97,21 +99,23 @@ export function VRStadiumExperience({ matchTime, collectiveEmotion }: VRStadiumE
     return (
       <group>
         {highlightedPlayers.map((player, i) => (
-          <group key={i} position={player.position}>
+          <group key={i} position={player.position as any}>
             {/* Player highlight ring */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>
+            <mesh rotation={[-Math.PI / 2, 0, 0] as any} position={[0, 0.1, 0] as any}>
               <ringGeometry args={[1.5, 2, 32]} />
               <meshStandardMaterial
-                color={player.team === "PSG" ? "#003f7f" : "#a50044"}
-                transparent
-                opacity={0.6}
-                emissive={player.team === "PSG" ? "#003f7f" : "#a50044"}
-                emissiveIntensity={0.3}
+                {...({
+                  color: player.team === "PSG" ? "#003f7f" : "#a50044",
+                  transparent: true,
+                  opacity: 0.6,
+                  emissive: player.team === "PSG" ? "#003f7f" : "#a50044",
+                  emissiveIntensity: 0.3
+                } as any)}
               />
             </mesh>
 
             {/* Player name billboard */}
-            <Billboard position={[0, 3, 0]}>
+            <Billboard position={[0, 3, 0] as any}>
               <Text
                 fontSize={0.5}
                 color="#ffffff"
@@ -131,7 +135,7 @@ export function VRStadiumExperience({ matchTime, collectiveEmotion }: VRStadiumE
 
   // VR Immersive Particles
   const VRAtmosphereParticles = () => {
-    const particlesRef = useRef<THREE.Group>(null)
+    const particlesRef = useRef(null)
 
     useFrame(() => {
       if (particlesRef.current) {
@@ -152,14 +156,16 @@ export function VRStadiumExperience({ matchTime, collectiveEmotion }: VRStadiumE
           const z = (Math.random() - 0.5) * 100
 
           return (
-            <mesh key={i} position={[x, y, z]}>
+            <mesh key={i} position={[x, y, z] as any}>
               <sphereGeometry args={[0.1]} />
               <meshStandardMaterial
-                color="#ffffff"
-                transparent
-                opacity={0.6}
-                emissive="#ffffff"
-                emissiveIntensity={0.2}
+                {...({
+                  color: "#ffffff",
+                  transparent: true,
+                  opacity: 0.6,
+                  emissive: "#ffffff",
+                  emissiveIntensity: 0.2
+                } as any)}
               />
             </mesh>
           )
@@ -176,9 +182,9 @@ export function VRStadiumExperience({ matchTime, collectiveEmotion }: VRStadiumE
       <VRAtmosphereParticles />
 
       {/* VR Floor Grid for spatial reference */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0] as any} position={[0, -2, 0] as any}>
         <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#1a1a1a" transparent opacity={0.1} wireframe />
+        <meshStandardMaterial {...({ color: "#1a1a1a", transparent: true, opacity: 0.1, wireframe: true } as any)} />
       </mesh>
     </group>
   )

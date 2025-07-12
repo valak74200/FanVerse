@@ -2,9 +2,10 @@
 
 import { useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { EmotionType } from '@/store/slices/emotionSlice'
-import { useAppSelector } from '@/store'
+import { useAppSelector } from '@/hooks/redux'
 import * as THREE from 'three'
+
+type EmotionType = 'hype' | 'joy' | 'anger' | 'sadness' | 'surprise' | 'fear'
 
 interface EmotionEffectsProps {
   activeEmotion: EmotionType | null
@@ -12,16 +13,15 @@ interface EmotionEffectsProps {
 }
 
 export function EmotionEffects({ activeEmotion, isAnimating }: EmotionEffectsProps) {
-  const effectsRef = useRef<THREE.Group>(null)
-  const particlesRef = useRef<THREE.Points>(null)
+  const effectsRef = useRef(null)
+  const particlesRef = useRef(null)
   const { emotions } = useAppSelector(state => state.emotion)
 
-  // Particle system for emotion effects
-  const particleCount = 1000
-  const particles = useRef<THREE.BufferGeometry>(new THREE.BufferGeometry())
-  const particlePositions = useRef<Float32Array>(new Float32Array(particleCount * 3))
-  const particleVelocities = useRef<Float32Array>(new Float32Array(particleCount * 3))
-  const particleColors = useRef<Float32Array>(new Float32Array(particleCount * 3))
+  // Particle system for emotion effects (reduced count for performance)
+  const particleCount = 500
+  const particlePositions = useRef(new Float32Array(particleCount * 3))
+  const particleVelocities = useRef(new Float32Array(particleCount * 3))
+  const particleColors = useRef(new Float32Array(particleCount * 3))
 
   useEffect(() => {
     // Initialize particles
@@ -46,9 +46,6 @@ export function EmotionEffects({ activeEmotion, isAnimating }: EmotionEffectsPro
       particleColors.current[i3 + 1] = 1
       particleColors.current[i3 + 2] = 1
     }
-
-    particles.current.setAttribute('position', new THREE.BufferAttribute(particlePositions.current, 3))
-    particles.current.setAttribute('color', new THREE.BufferAttribute(particleColors.current, 3))
   }, [])
 
   useFrame((state) => {
@@ -82,27 +79,27 @@ export function EmotionEffects({ activeEmotion, isAnimating }: EmotionEffectsPro
             particleColors.current[i3 + 1] = 0.5 // Green
             particleColors.current[i3 + 2] = 0 // Blue
             break
-          case 'love':
+          case 'joy':
             particleColors.current[i3] = 1 // Red
             particleColors.current[i3 + 1] = 0.2 // Green
             particleColors.current[i3 + 2] = 0.8 // Blue
             break
-          case 'rage':
+          case 'anger':
             particleColors.current[i3] = 1 // Red
             particleColors.current[i3 + 1] = 0 // Green
             particleColors.current[i3 + 2] = 0 // Blue
             break
-          case 'shock':
+          case 'surprise':
             particleColors.current[i3] = 1 // Red
             particleColors.current[i3 + 1] = 1 // Green
             particleColors.current[i3 + 2] = 0 // Blue
             break
-          case 'sad':
+          case 'sadness':
             particleColors.current[i3] = 0.2 // Red
             particleColors.current[i3 + 1] = 0.2 // Green
             particleColors.current[i3 + 2] = 1 // Blue
             break
-          case 'boring':
+          case 'fear':
             particleColors.current[i3] = 0.5 // Red
             particleColors.current[i3 + 1] = 0.5 // Green
             particleColors.current[i3 + 2] = 0.5 // Blue
@@ -110,9 +107,7 @@ export function EmotionEffects({ activeEmotion, isAnimating }: EmotionEffectsPro
         }
       }
 
-      // Update buffer attributes
-      particles.current.attributes.position.needsUpdate = true
-      particles.current.attributes.color.needsUpdate = true
+      // Update buffer attributes will be handled by R3F automatically
 
       // Animate the entire effect group
       effectsRef.current.rotation.y = time * 0.1
@@ -131,46 +126,55 @@ export function EmotionEffects({ activeEmotion, isAnimating }: EmotionEffectsPro
       case 'hype':
         return (
           <pointLight
-            position={[0, 30, 0]}
+            position={[0, 30, 0] as any}
             color="#ff4500"
             intensity={intensity * 3}
             distance={100}
           />
         )
-      case 'love':
+      case 'joy':
         return (
           <pointLight
-            position={[0, 30, 0]}
+            position={[0, 30, 0] as any}
             color="#ff69b4"
             intensity={intensity * 2}
             distance={80}
           />
         )
-      case 'rage':
+      case 'anger':
         return (
           <pointLight
-            position={[0, 30, 0]}
+            position={[0, 30, 0] as any}
             color="#ff0000"
             intensity={intensity * 4}
             distance={120}
           />
         )
-      case 'shock':
+      case 'surprise':
         return (
           <pointLight
-            position={[0, 30, 0]}
+            position={[0, 30, 0] as any}
             color="#ffff00"
             intensity={intensity * 5}
             distance={60}
           />
         )
-      case 'sad':
+      case 'sadness':
         return (
           <pointLight
-            position={[0, 30, 0]}
+            position={[0, 30, 0] as any}
             color="#4169e1"
             intensity={intensity * 1.5}
             distance={70}
+          />
+        )
+      case 'fear':
+        return (
+          <pointLight
+            position={[0, 30, 0] as any}
+            color="#666666"
+            intensity={intensity * 1}
+            distance={50}
           />
         )
       default:
@@ -182,11 +186,24 @@ export function EmotionEffects({ activeEmotion, isAnimating }: EmotionEffectsPro
     <group ref={effectsRef}>
       {/* Particle System */}
       <points ref={particlesRef}>
-        <primitive object={particles.current} />
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            count={particleCount}
+            array={particlePositions.current}
+            itemSize={3}
+          />
+          <bufferAttribute
+            attach="attributes-color"
+            count={particleCount}
+            array={particleColors.current}
+            itemSize={3}
+          />
+        </bufferGeometry>
         <pointsMaterial
           size={2}
-          vertexColors
-          transparent
+          vertexColors={true}
+          transparent={true}
           opacity={0.8}
           sizeAttenuation={true}
         />
@@ -207,21 +224,17 @@ export function EmotionEffects({ activeEmotion, isAnimating }: EmotionEffectsPro
                 const z = Math.sin(angle) * 30
                 
                 return (
-                  <mesh key={i} position={[x, 40, z]}>
+                  <mesh key={i} position={[x, 40, z] as any}>
                     <sphereGeometry args={[1]} />
-                    <meshStandardMaterial
-                      color="#ff4500"
-                      emissive="#ff4500"
-                      emissiveIntensity={emotions[activeEmotion].intensity}
-                    />
+                    <meshBasicMaterial args={[{ color: "#ff4500" }]} />
                   </mesh>
                 )
               })}
             </group>
           )}
 
-          {/* Hearts for love */}
-          {activeEmotion === 'love' && (
+          {/* Hearts for joy */}
+          {activeEmotion === 'joy' && (
             <group>
               {Array.from({ length: 10 }).map((_, i) => (
                 <mesh
@@ -230,29 +243,21 @@ export function EmotionEffects({ activeEmotion, isAnimating }: EmotionEffectsPro
                     (Math.random() - 0.5) * 60,
                     20 + Math.random() * 20,
                     (Math.random() - 0.5) * 60
-                  ]}
+                  ] as any}
                 >
                   <sphereGeometry args={[0.5]} />
-                  <meshStandardMaterial
-                    color="#ff69b4"
-                    emissive="#ff69b4"
-                    emissiveIntensity={emotions[activeEmotion].intensity * 0.5}
-                  />
+                  <meshBasicMaterial args={[{ color: "#ff69b4" }]} />
                 </mesh>
               ))}
             </group>
           )}
 
-          {/* Lightning for shock */}
-          {activeEmotion === 'shock' && (
+          {/* Lightning for surprise */}
+          {activeEmotion === 'surprise' && (
             <group>
-              <mesh position={[0, 50, 0]}>
+              <mesh position={[0, 50, 0] as any}>
                 <cylinderGeometry args={[0.1, 0.1, 100]} />
-                <meshStandardMaterial
-                  color="#ffff00"
-                  emissive="#ffff00"
-                  emissiveIntensity={emotions[activeEmotion].intensity}
-                />
+                <meshBasicMaterial args={[{ color: "#ffff00" }]} />
               </mesh>
             </group>
           )}

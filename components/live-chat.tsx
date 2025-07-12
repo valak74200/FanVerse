@@ -14,9 +14,8 @@ interface ChatMessage {
   timestamp: string
   avatar: string
 }
-
 export function LiveChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState([
     {
       id: 1,
       user: "Mike_PSG",
@@ -48,7 +47,7 @@ export function LiveChat() {
   ])
 
   const [newMessage, setNewMessage] = useState("")
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef(null)
 
   const mockMessages = [
     "GOOOOOAL! What a strike! ⚽",

@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, PerspectiveCamera, Stats } from '@react-three/drei'
-import { useAppSelector, useAppDispatch } from '@/store'
+import { useAppSelector, useAppDispatch } from '@/hooks/redux'
 import { setLoaded, updateCameraPosition } from '@/store/slices/stadiumSlice'
 import { StadiumStructure } from './StadiumStructure'
 import { CrowdSystem } from './CrowdSystem'
@@ -12,6 +12,8 @@ import { WeatherSystem } from './WeatherSystem'
 import { LoadingScreen } from './LoadingScreen'
 import { CameraController } from './CameraController'
 import { UserAvatars } from './UserAvatars'
+import { Field } from './Field'
+import { Stands } from './Stands'
 import * as THREE from 'three'
 
 interface VirtualStadiumProps {
@@ -19,7 +21,7 @@ interface VirtualStadiumProps {
 }
 
 export function VirtualStadium({ className }: VirtualStadiumProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasRef = useRef(null)
   const dispatch = useAppDispatch()
   
   const {
@@ -52,33 +54,35 @@ export function VirtualStadium({ className }: VirtualStadiumProps) {
 
   // Performance settings based on user preference
   const getPerformanceSettings = () => {
+    const devicePixelRatio = typeof window !== 'undefined' ? window.devicePixelRatio : 1
+    
     switch (performance) {
       case 'low':
         return {
           shadows: false,
           antialias: false,
-          pixelRatio: Math.min(window.devicePixelRatio, 1),
+          pixelRatio: Math.min(devicePixelRatio, 1),
           powerPreference: 'low-power' as const,
         }
       case 'medium':
         return {
           shadows: true,
           antialias: true,
-          pixelRatio: Math.min(window.devicePixelRatio, 1.5),
+          pixelRatio: Math.min(devicePixelRatio, 1.5),
           powerPreference: 'default' as const,
         }
       case 'high':
         return {
           shadows: true,
           antialias: true,
-          pixelRatio: Math.min(window.devicePixelRatio, 2),
+          pixelRatio: Math.min(devicePixelRatio, 2),
           powerPreference: 'high-performance' as const,
         }
       default:
         return {
           shadows: true,
           antialias: true,
-          pixelRatio: Math.min(window.devicePixelRatio, 1.5),
+          pixelRatio: Math.min(devicePixelRatio, 1.5),
           powerPreference: 'default' as const,
         }
     }
@@ -139,39 +143,45 @@ export function VirtualStadium({ className }: VirtualStadiumProps) {
           enablePan={true}
           enableZoom={true}
           enableRotate={true}
-          maxDistance={500}
-          minDistance={5}
-          maxPolarAngle={Math.PI / 2.1}
+          autoRotate={false}
+          autoRotateSpeed={0}
+          enableDamping={true}
+          dampingFactor={0.08}
+          maxDistance={250}
+          minDistance={30}
+          maxPolarAngle={Math.PI / 2.2}
+          minPolarAngle={Math.PI / 12}
           target={cameraTarget}
+          zoomSpeed={0.2}
+          rotateSpeed={0.3}
+          panSpeed={0.4}
+
         />
 
         {/* Lighting System */}
-        <ambientLight intensity={timeOfDay === 'night' ? 0.2 : 0.4} />
+        <ambientLight intensity={timeOfDay === 'night' ? 0.3 : 0.6} />
         <directionalLight
-          position={[100, 100, 50]}
-          intensity={timeOfDay === 'night' ? 0.8 : 1.5}
-          castShadow={performanceSettings.shadows}
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-far={300}
-          shadow-camera-left={-150}
-          shadow-camera-right={150}
-          shadow-camera-top={150}
-          shadow-camera-bottom={-150}
+          position={[100, 100, 50] as any}
+          intensity={timeOfDay === 'night' ? 0.8 : 1.2}
+          castShadow={false}
         />
 
-        {/* Stadium floodlights for night mode */}
-        {timeOfDay === 'night' && (
+        {/* Stadium floodlights for night mode - REDUCED */}
+        {timeOfDay === 'night' && performance === 'high' && (
           <>
-            <pointLight position={[0, 30, 0]} intensity={2} distance={100} />
-            <pointLight position={[30, 20, 30]} intensity={1.5} distance={80} />
-            <pointLight position={[-30, 20, 30]} intensity={1.5} distance={80} />
-            <pointLight position={[30, 20, -30]} intensity={1.5} distance={80} />
-            <pointLight position={[-30, 20, -30]} intensity={1.5} distance={80} />
+            <pointLight position={[0, 30, 0] as any} intensity={1.5} distance={80} />
+            <pointLight position={[40, 25, 0] as any} intensity={1} distance={60} />
+            <pointLight position={[-40, 25, 0] as any} intensity={1} distance={60} />
           </>
         )}
 
         <Suspense fallback={null}>
+          {/* Terrain de football réaliste */}
+          <Field />
+
+          {/* Tribunes modernes */}
+          <Stands />
+
           {/* Main Stadium Structure */}
           <StadiumStructure 
             timeOfDay={timeOfDay}

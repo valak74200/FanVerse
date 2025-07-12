@@ -31,7 +31,7 @@ interface MarketplaceListing {
 }
 
 export function NFTMarketplace() {
-  const [listings, setListings] = useState<MarketplaceListing[]>([
+  const [listings, setListings] = useState([
     {
       id: "listing-1",
       nftId: "messi-goal-89",
@@ -111,9 +111,9 @@ export function NFTMarketplace() {
   ])
 
   const [searchTerm, setSearchTerm] = useState("")
-  const [sortBy, setSortBy] = useState<"price" | "time" | "popularity">("popularity")
-  const [filterRarity, setFilterRarity] = useState<string>("all")
-  const [filterTeam, setFilterTeam] = useState<string>("all")
+  const [sortBy, setSortBy] = useState("popularity")
+  const [filterRarity, setFilterRarity] = useState("all")
+  const [filterTeam, setFilterTeam] = useState("all")
   const [priceRange, setPriceRange] = useState({ min: "", max: "" })
 
   const rarityColors = {

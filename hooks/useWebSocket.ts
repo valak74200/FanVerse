@@ -1,124 +1,93 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { io, Socket } from 'socket.io-client'
-import { useAppDispatch, useAppSelector } from '@/store'
-import { updateEmotionFromServer, bulkUpdateEmotions } from '@/store/slices/emotionSlice'
-import { updateOnlineUsers } from '@/store/slices/userSlice'
-import { updateSpectatorCount, addEvent, removeEvent } from '@/store/slices/stadiumSlice'
-
-interface WebSocketEvents {
-  'emotion:update': { emotion: string; count: number; intensity: number }
-  'emotion:bulk': Record<string, { count: number; intensity: number }>
-  'users:online': any[]
-  'stadium:spectator_count': number
-  'stadium:event': { type: 'add' | 'remove'; event: string }
-  'match:goal': { team: string; player: string; minute: number }
-  'match:card': { team: string; player: string; type: 'yellow' | 'red'; minute: number }
-}
+import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 
 export const useWebSocket = () => {
-  const socketRef = useRef<Socket | null>(null)
+  const socketRef = useRef(null)
   const dispatch = useAppDispatch()
   const { profile } = useAppSelector(state => state.user)
   const reconnectAttempts = useRef(0)
   const maxReconnectAttempts = 5
 
   const connect = useCallback(() => {
-    if (socketRef.current?.connected) return
+    if (socketRef.current?.readyState === WebSocket.OPEN) return
 
-    // In a real app, this would be your WebSocket server URL
-    const socketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:3001'
-    
-    socketRef.current = io(socketUrl, {
-      transports: ['websocket', 'polling'],
-      timeout: 20000,
-      forceNew: true,
-    })
-
-    const socket = socketRef.current
-
-    socket.on('connect', () => {
-      console.log('WebSocket connected')
-      reconnectAttempts.current = 0
+    try {
+      // In a real app, this would be your WebSocket server URL
+      const socketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:3001'
       
-      // Join stadium room
-      socket.emit('join:stadium', { userId: profile?.id })
-    })
+      socketRef.current = new WebSocket(socketUrl)
 
-    socket.on('disconnect', (reason) => {
-      console.log('WebSocket disconnected:', reason)
-      
-      // Auto-reconnect logic
-      if (reason === 'io server disconnect') {
-        // Server initiated disconnect, don't reconnect
-        return
+      const socket = socketRef.current
+
+      socket.onopen = () => {
+        console.log('WebSocket connected')
+        reconnectAttempts.current = 0
+        
+        // Join stadium room
+        socket.send(JSON.stringify({ 
+          type: 'join:stadium', 
+          data: { userId: profile?.id } 
+        }))
       }
-      
-      if (reconnectAttempts.current < maxReconnectAttempts) {
-        setTimeout(() => {
-          reconnectAttempts.current++
-          connect()
-        }, Math.pow(2, reconnectAttempts.current) * 1000) // Exponential backoff
+
+      socket.onclose = (event) => {
+        console.log('WebSocket disconnected:', event.code, event.reason)
+        
+        // Auto-reconnect logic
+        if (reconnectAttempts.current < maxReconnectAttempts) {
+          setTimeout(() => {
+            reconnectAttempts.current++
+            connect()
+          }, Math.pow(2, reconnectAttempts.current) * 1000) // Exponential backoff
+        }
       }
-    })
 
-    socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error)
-    })
-
-    // Emotion updates
-    socket.on('emotion:update', (data: WebSocketEvents['emotion:update']) => {
-      dispatch(updateEmotionFromServer({
-        emotion: data.emotion as any,
-        count: data.count,
-        intensity: data.intensity,
-      }))
-    })
-
-    socket.on('emotion:bulk', (data: WebSocketEvents['emotion:bulk']) => {
-      dispatch(bulkUpdateEmotions(data as any))
-    })
-
-    // User updates
-    socket.on('users:online', (users: WebSocketEvents['users:online']) => {
-      dispatch(updateOnlineUsers(users))
-    })
-
-    // Stadium updates
-    socket.on('stadium:spectator_count', (count: WebSocketEvents['stadium:spectator_count']) => {
-      dispatch(updateSpectatorCount(count))
-    })
-
-    socket.on('stadium:event', (data: WebSocketEvents['stadium:event']) => {
-      if (data.type === 'add') {
-        dispatch(addEvent(data.event))
-      } else {
-        dispatch(removeEvent(data.event))
+      socket.onerror = (error) => {
+        console.error('WebSocket error:', error)
       }
-    })
 
-    // Match events
-    socket.on('match:goal', (data: WebSocketEvents['match:goal']) => {
-      // Handle goal events - could trigger automatic crowd reactions
-      console.log('Goal scored:', data)
-    })
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data)
+          
+          switch (message.type) {
+            case 'emotion:update':
+              // Handle emotion updates from server
+              console.log('Emotion update received:', message.data)
+              break
+            case 'users:online':
+              // Handle online users update
+              console.log('Online users update:', message.data)
+              break
+            case 'stadium:event':
+              // Handle stadium events
+              console.log('Stadium event:', message.data)
+              break
+            default:
+              console.log('Unknown message type:', message.type)
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error)
+        }
+      }
 
-    socket.on('match:card', (data: WebSocketEvents['match:card']) => {
-      // Handle card events
-      console.log('Card shown:', data)
-    })
-
+    } catch (error) {
+      console.error('WebSocket connection failed:', error)
+    }
   }, [dispatch, profile?.id])
 
   const disconnect = useCallback(() => {
     if (socketRef.current) {
-      socketRef.current.disconnect()
+      socketRef.current.close()
       socketRef.current = null
     }
   }, [])
 
-  const emit = useCallback((event: string, data: any) => {
-    if (socketRef.current?.connected) {
-      socketRef.current.emit(event, data)
+  const emit = useCallback((type: string, data: any) => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({ type, data }))
+    } else {
+      console.warn('WebSocket not connected, cannot emit:', type)
     }
   }, [])
 
@@ -149,7 +118,7 @@ export const useWebSocket = () => {
 
   return {
     socket: socketRef.current,
-    isConnected: socketRef.current?.connected || false,
+    isConnected: socketRef.current?.readyState === WebSocket.OPEN,
     connect,
     disconnect,
     emit,
