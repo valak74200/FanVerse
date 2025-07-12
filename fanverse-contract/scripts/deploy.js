@@ -1,6 +1,6 @@
 async function main() {
-  const EmotionBet = await ethers.getContractFactory("EmotionBet");
-  const contract = await EmotionBet.deploy();
+  const AttendanceNFT = await ethers.getContractFactory("EmotionBet");
+  const contract = await AttendanceNFT.deploy();
   await contract.waitForDeployment();
   console.log("✅ EmotionBet déployé à :", contract.target);
 }
