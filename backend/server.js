@@ -11,28 +11,8 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
-// ✅ CONFIGURATION CORS ULTRA-PERMISSIVE POUR DÉVELOPPEMENT
-app.use(cors({
-    origin: '*', // Permet TOUTES les origines en développement
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-}));
-
-// ✅ PRÉFLIGHT OPTIONS pour toutes les routes
-app.options('*', cors());
-
-// ✅ SOCKET.IO CORS
-const io = new Server(server, {
-    cors: {
-        origin: '*', // Permet toutes les origines
-        methods: ["GET", "POST"],
-        credentials: true
-    }
-});
-
-// ✅ AJOUTEZ CETTE LIGNE MANQUANTE
-const PORT = process.env.PORT || 3000;
+// Change le port pour éviter les conflits
+const PORT = process.env.PORT || 3001; // ✅ CHANGÉ: 3001 au lieu de 3000
 const MONGO_URI = process.env.MONGO_URI;
 
 // --- CONFIGURATION BLOCKCHAIN ---
@@ -312,6 +292,26 @@ async function saveBlockchainNFT(owner, tokenId, rarity, transactionHash) {
 // --- MIDDLEWARE ---
 app.use(express.json());
 app.use(express.static('public'));
+
+// ✅ CONFIGURATION CORS ULTRA-PERMISSIVE POUR DÉVELOPPEMENT
+app.use(cors({
+    origin: ['http://localhost:3000', 'http://localhost:3001'], // Next.js + Backend
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
+
+// ✅ PRÉFLIGHT OPTIONS pour toutes les routes
+app.options('*', cors());
+
+// ✅ SOCKET.IO CORS
+const io = new Server(server, {
+    cors: {
+        origin: ['http://localhost:3000', 'http://localhost:3001'],
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
 
 // --- ROUTES API BLOCKCHAIN ---
 

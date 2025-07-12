@@ -303,6 +303,57 @@
                     <div id="blockchain-bet-status" style="margin-top: 10px; font-size: 0.9em;"></div>
                 </div>
             </div>
+
+            <!-- ✅ NOUVEAU: Section de gestion des gains -->
+            <div id="winnings-section" class="card" style="display: none;">
+                <h3>💰 Gestion des gains</h3>
+                
+                <!-- Vérifier les gains potentiels -->
+                <button id="check-winnings-btn" style="background: #f7931e; width: 100%; margin: 5px 0;">
+                    🔍 Vérifier mes gains
+                </button>
+                
+                <!-- Affichage des gains -->
+                <div id="winnings-display" style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; display: none;">
+                    <div style="color: #4ade80; font-weight: bold;">💰 Gains disponibles:</div>
+                    <div id="winnings-amount" style="font-size: 1.2em; color: #fff;">0 CHZ</div>
+                </div>
+                
+                <!-- Bouton pour réclamer les gains -->
+                <button id="claim-winnings-btn" style="background: #4ade80; width: 100%; margin: 5px 0;" disabled>
+                    🏆 Réclamer mes gains
+                </button>
+                
+                <!-- Statistiques du contrat -->
+                <button id="get-stats-btn" style="background: #667eea; width: 100%; margin: 5px 0;">
+                    📊 Voir statistiques
+                </button>
+                
+                <div id="contract-stats" style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; display: none;">
+                    <div style="font-size: 0.9em; color: rgba(255,255,255,0.8);">
+                        <div>Total Pool: <span id="stats-total-pool">0</span> CHZ</div>
+                        <div>Winners Pool: <span id="stats-winners-pool">0</span> CHZ</div>
+                        <div>Total Bets: <span id="stats-total-bets">0</span></div>
+                        <div>Status: <span id="stats-resolved">Non résolu</span></div>
+                        <div>Winning: <span id="stats-winning">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ✅ NOUVEAU: Section Owner (résolution des paris) -->
+            <div id="owner-section" class="card" style="display: none;">
+                <h3>👑 Fonctions Owner</h3>
+                
+                <input type="text" id="winning-description-input" 
+                       placeholder="Description gagnante..."
+                       style="width: 100%; padding: 8px; margin: 5px 0; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; color: white;">
+                
+                <button id="resolve-bet-btn" style="background: #f44336; width: 100%; margin: 5px 0;" disabled>
+                    ⚖️ Résoudre le pari
+                </button>
+                
+                <div id="resolve-status" style="margin: 10px 0; font-size: 0.9em;"></div>
+            </div>
         </div>
 
         <div id="center-panel">
@@ -392,6 +443,7 @@
         const TESTNET_CONFIG = { chainId: '0x15b32', chainName: 'Chiliz Spicy Testnet', nativeCurrency: { name: 'Chiliz', symbol: 'CHZ', decimals: 18 }, rpcUrls: ['https://spicy-rpc.chiliz.com/'], blockExplorerUrls: ['https://testnet.chiliscan.com/'] };
         let provider = null; let signer = null; let walletAddress = null; let blockchainConnected = false;
         let currentBetData = null; let selectedBlockchainOption = null;
+        let emotionBetContract = null;
         
         // --- DOM Elements ---
         const loginSection = document.getElementById('login-section');
@@ -419,6 +471,15 @@
         const blockchainBetAmount = document.getElementById('blockchain-bet-amount');
         const placeBlockchainBetBtn = document.getElementById('place-blockchain-bet-btn');
         const blockchainBetStatus = document.getElementById('blockchain-bet-status');
+        const checkWinningsBtn = document.getElementById('check-winnings-btn');
+        const winningsDisplay = document.getElementById('winnings-display');
+        const winningsAmount = document.getElementById('winnings-amount');
+        const claimWinningsBtn = document.getElementById('claim-winnings-btn');
+        const getStatsBtn = document.getElementById('get-stats-btn');
+        const contractStats = document.getElementById('contract-stats');
+        const resolveBetBtn = document.getElementById('resolve-bet-btn');
+        const winningDescriptionInput = document.getElementById('winning-description-input');
+        const resolveStatus = document.getElementById('resolve-status');
         let betTimerInterval = null;
 
         // --- Bet Translator ---
@@ -468,9 +529,15 @@
                 } 
                 blockchainConnected = true; 
                 console.log(`✅ MetaMask connected: ${walletAddress}`); 
-                if (currentBetData) { 
-                    setupBlockchainBetOptions(currentBetData); 
-                } 
+                await checkOwnerStatus();
+                document.getElementById('winnings-section').style.display = 'block';
+
+                // Auto-check winnings every 30 seconds
+                setInterval(async () => {
+                    if (blockchainConnected && walletAddress) {
+                        await checkMyWinnings();
+                    }
+                }, 30000);
             } catch (error) { 
                 console.error('❌ MetaMask connection error:', error); 
                 alert(`Error: ${error.message}`); 
@@ -530,7 +597,26 @@
                 blockchainBetStatus.innerHTML = `<div style="color: #f7931e;">⏳ Placing bet...</div><div style="color: var(--text-secondary); font-size: 0.8em;">Waiting for transaction confirmation...</div>`; 
                 placeBlockchainBetBtn.disabled = true; 
                 const emotionBetAddress = '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc'; 
-                const emotionBetABI = ["function placeBet(string description) payable"]; 
+                const emotionBetABI = [
+                    "function owner() view returns (address)",
+                    "function bets(uint256) view returns (address user, string description, uint96 amount, bool claimed)",
+                    "function closed() view returns (bool)",
+                    "function resolved() view returns (bool)",
+                    "function winningDescription() view returns (string)",
+                    "function totalPool() view returns (uint256)",
+                    "function winnersPool() view returns (uint256)",
+                    "function placeBet(string description) payable",
+                    "function endBet()",
+                    "function getAllBets() view returns (tuple(address user, string description, uint96 amount, bool claimed)[])",
+                    "function getBetCount() view returns (uint256)",
+                    "function resolveBet(string winningDescription)",
+                    "function claimWinnings()",
+                    "function checkWinnings(address user) view returns (uint256)",
+                    "function getStats() view returns (uint256 totalPool, uint256 winnersPool, uint256 totalBets, bool resolved, string winningDescription)",
+                    "event BetPlaced(address indexed user, string description, uint96 amount)",
+                    "event BetResolved(string winningDescription, uint256 totalWinners, uint256 totalPool)",
+                    "event WinningsClaimed(address indexed user, uint256 amount)"
+                ]; 
                 const betDescription = `${translateText(currentBetData.question)} - Answer: ${selectedBlockchainOption.text}`; 
                 const contract = new ethers.Contract(emotionBetAddress, emotionBetABI, signer); 
                 const tx = await contract.placeBet(betDescription, { value: ethers.utils.parseEther(amount.toString()) }); 
@@ -574,7 +660,7 @@
         loginButton.addEventListener('click', () => { const userId = userIdInput.value.trim(); if (userId) socket.emit('authenticate', { userId, walletAddress }); else loginMessage.textContent = 'Please enter a User ID.'; });
         socket.on('authenticated', (data) => { 
             loginSection.style.display = 'none'; 
-            const sectionsToShow = ['user-info', 'emotion-section', 'bet-section', 'chat-section', 'action-section', 'blockchain-section', 'nft-section', 'stadium-section']; 
+            const sectionsToShow = ['user-info', 'emotion-section', 'bet-section', 'chat-section', 'action-section', 'blockchain-section', 'nft-section', 'stadium-section', 'winnings-section']; 
             sectionsToShow.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'flex'; }); 
             displayUserId.textContent = data.userId; 
             socket.userId = data.userId; 
@@ -652,6 +738,401 @@
             window.ethereum.on('accountsChanged', (accounts) => { if (accounts.length === 0) { disconnectWalletBtn.click(); } else if (accounts[0] !== walletAddress) { location.reload(); } }); 
             window.ethereum.on('chainChanged', (chainId) => { if (parseInt(chainId, 16) !== 88882) { alert('⚠️ You must stay on the Chiliz Testnet!'); location.reload(); } }); 
         }
+
+        // --- Vérification des gains ---
+        checkWinningsBtn.addEventListener('click', async () => {
+            if (!walletAddress) { alert('Please connect your wallet first'); return; }
+            try {
+                const emotionBetAddress = '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc';
+                const emotionBetABI = [
+                    "function checkWinnings(address user) view returns (uint256)",
+                    "function getStats() view returns (uint256 totalPool, uint256 winnersPool, uint256 totalBets, bool resolved, string winningDescription)",
+                ];
+                const contract = new ethers.Contract(emotionBetAddress, emotionBetABI, provider);
+                
+                // Vérifier les gains
+                const winnings = await contract.checkWinnings(walletAddress);
+                const winningsInCHZ = ethers.utils.formatEther(winnings);
+                winningsAmount.textContent = `${parseFloat(winningsInCHZ).toFixed(4)} CHZ`;
+                
+                // Afficher les statistiques du contrat
+                const stats = await contract.getStats();
+                document.getElementById('stats-total-pool').textContent = ethers.utils.formatEther(stats.totalPool);
+                document.getElementById('stats-winners-pool').textContent = ethers.utils.formatEther(stats.winnersPool);
+                document.getElementById('stats-total-bets').textContent = stats.totalBets.toString();
+                document.getElementById('stats-resolved').textContent = stats.resolved ? 'Résolu' : 'Non résolu';
+                document.getElementById('stats-winning').textContent = stats.winningDescription || '-';
+                
+                winningsDisplay.style.display = 'block';
+                claimWinningsBtn.disabled = winnings.isZero();
+                console.log(`✅ Winnings checked: ${winningsInCHZ} CHZ`);
+            } catch (error) {
+                console.error('❌ Error checking winnings:', error);
+                alert('Error checking winnings. See console for details.');
+            }
+        });
+
+        // --- Réclamer les gains ---
+        claimWinningsBtn.addEventListener('click', async () => {
+            try {
+                const emotionBetAddress = '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc';
+                const emotionBetABI = [
+                    "function claimWinnings()",
+                ];
+                const contract = new ethers.Contract(emotionBetAddress, emotionBetABI, signer);
+                
+                const tx = await contract.claimWinnings();
+                await tx.wait();
+                
+                alert('✅ Gains réclamés avec succès !');
+                claimWinningsBtn.disabled = true;
+                checkWinningsBtn.click(); // Refresh winnings display
+            } catch (error) {
+                console.error('❌ Error claiming winnings:', error);
+                alert('Error claiming winnings. See console for details.');
+            }
+        });
+
+        // --- Obtenir les statistiques du contrat ---
+        getStatsBtn.addEventListener('click', async () => {
+            try {
+                if (!emotionBetContract) {
+                    console.log('❌ Contract not connected');
+                    return;
+                }
+                
+                console.log('📊 Getting contract stats...');
+                const stats = await emotionBetContract.getStats();
+                
+                // Update display
+                document.getElementById('stats-total-pool').textContent = 
+                    parseFloat(ethers.utils.formatEther(stats._totalPool)).toFixed(4);
+                document.getElementById('stats-winners-pool').textContent = 
+                    parseFloat(ethers.utils.formatEther(stats._winnersPool)).toFixed(4);
+                document.getElementById('stats-total-bets').textContent = stats._totalBets.toString();
+                document.getElementById('stats-resolved').textContent = stats._resolved ? 'Résolu' : 'En cours';
+                document.getElementById('stats-winning').textContent = stats._winningDescription || '-';
+                
+                // Show stats
+                document.getElementById('contract-stats').style.display = 'block';
+                
+                console.log('✅ Stats updated');
+                
+            } catch (error) {
+                console.error('❌ Error getting stats:', error);
+            }
+        });
+
+        // --- Résoudre le pari (Owner uniquement) ---
+        resolveBetBtn.addEventListener('click', async () => {
+            try {
+                if (!emotionBetContract) {
+                    console.log('❌ Contract not connected');
+                    return;
+                }
+                
+                const winningDescription = document.getElementById('winning-description-input').value.trim();
+                if (!winningDescription) {
+                    console.log('❌ Please enter winning description');
+                    return;
+                }
+                
+                console.log(`⚖️ Resolving bet with: "${winningDescription}"`);
+                
+                const resolveStatus = document.getElementById('resolve-status');
+                resolveStatus.innerHTML = `
+                    <div style="color: #ff9800;">⏳ Resolving bet...</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        Transaction being processed...
+                    </div>
+                `;
+                
+                const tx = await emotionBetContract.resolveBet(winningDescription);
+                console.log(`📤 Resolve transaction sent: ${tx.hash}`);
+                
+                resolveStatus.innerHTML = `
+                    <div style="color: #ff9800;">📤 Transaction sent</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        Hash: ${tx.hash.substring(0, 10)}...
+                    </div>
+                `;
+                
+                const receipt = await tx.wait();
+                console.log(`✅ Bet resolved! Block: ${receipt.blockNumber}`);
+                
+                resolveStatus.innerHTML = `
+                    <div style="color: #4ade80;">✅ Bet resolved successfully!</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        Winner: ${winningDescription}
+                    </div>
+                `;
+                
+                // Clear input and refresh stats
+                document.getElementById('winning-description-input').value = '';
+                await getContractStats();
+                await checkMyWinnings(); // Check if user has winnings
+                
+            } catch (error) {
+                console.error('❌ Error resolving bet:', error);
+                document.getElementById('resolve-status').innerHTML = `
+                    <div style="color: #f87171;">❌ Error resolving bet</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        ${error.message}
+                    </div>
+                `;
+            }
+        });
+
+        // ✅ Écouter les événements du contrat
+        if (emotionBetContract) {
+            // Écouter les résolutions de paris
+            emotionBetContract.on('BetResolved', (winningDescription, totalWinners, totalPool) => {
+                console.log(`🎯 Bet resolved: ${winningDescription}`);
+                console.log(`💰 Total pool: ${ethers.utils.formatEther(totalPool)} CHZ`);
+                console.log(`🏆 Winners pool: ${ethers.utils.formatEther(totalWinners)} CHZ`);
+                
+                // Auto-check winnings when bet is resolved
+                setTimeout(checkMyWinnings, 2000);
+                setTimeout(getContractStats, 1000);
+            });
+            
+            // Écouter les réclamations de gains
+            emotionBetContract.on('WinningsClaimed', (user, amount) => {
+                console.log(`💸 ${user} claimed ${ethers.utils.formatEther(amount)} CHZ`);
+                
+                if (user.toLowerCase() === walletAddress?.toLowerCase()) {
+                    console.log('🎉 You successfully claimed your winnings!');
+                }
+            });
+        }
+
+        // ✅ NOUVELLES FONCTIONS manquantes
+
+        // Vérifier les gains potentiels de l'utilisateur
+        async function checkMyWinnings() {
+            try {
+                if (!walletAddress) {
+                    console.log('❌ Wallet not connected');
+                    return;
+                }
+
+                console.log('🔍 Checking winnings for:', walletAddress);
+                
+                const emotionBetAddress = '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc';
+                const emotionBetABI = [
+                    "function checkWinnings(address user) view returns (uint256)",
+                    "function getStats() view returns (uint256 totalPool, uint256 winnersPool, uint256 totalBets, bool resolved, string winningDescription)",
+                ];
+                
+                const contract = new ethers.Contract(emotionBetAddress, emotionBetABI, provider);
+                const winnings = await contract.checkWinnings(walletAddress);
+                const winningsInCHZ = ethers.utils.formatEther(winnings);
+                
+                console.log(`💰 Winnings found: ${winningsInCHZ} CHZ`);
+                
+                const winningsDisplay = document.getElementById('winnings-display');
+                const winningsAmount = document.getElementById('winnings-amount');
+                const claimBtn = document.getElementById('claim-winnings-btn');
+                
+                winningsAmount.textContent = `${parseFloat(winningsInCHZ).toFixed(4)} CHZ`;
+                
+                if (winnings.gt(0)) {
+                    winningsDisplay.style.display = 'block';
+                    claimBtn.disabled = false;
+                    claimBtn.textContent = `🏆 Réclamer ${parseFloat(winningsInCHZ).toFixed(4)} CHZ`;
+                    console.log('✅ Winnings available for claim');
+                } else {
+                    winningsDisplay.style.display = 'none';
+                    claimBtn.disabled = true;
+                    claimBtn.textContent = '🏆 Aucun gain à réclamer';
+                    console.log('ℹ️ No winnings available');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error checking winnings:', error);
+            }
+        }
+
+        // Réclamer les gains
+        async function claimWinnings() {
+            try {
+                if (!signer) {
+                    console.log('❌ Signer not connected');
+                    return;
+                }
+
+                console.log('🎯 Claiming winnings...');
+                
+                const emotionBetAddress = '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc';
+                const emotionBetABI = ["function claimWinnings()"];
+                
+                const contract = new ethers.Contract(emotionBetAddress, emotionBetABI, signer);
+                const tx = await contract.claimWinnings();
+                console.log(`📤 Transaction sent: ${tx.hash}`);
+                
+                const receipt = await tx.wait();
+                console.log(`✅ Winnings claimed! Block: ${receipt.blockNumber}`);
+                
+                // Refresh UI
+                await updateWalletBalance();
+                await checkMyWinnings();
+                
+                // Update button state
+                const claimBtn = document.getElementById('claim-winnings-btn');
+                claimBtn.disabled = true;
+                claimBtn.textContent = '✅ Gains réclamés';
+                
+            } catch (error) {
+                console.error('❌ Error claiming winnings:', error);
+            }
+        }
+
+        // Obtenir les statistiques du contrat
+        async function getContractStats() {
+            try {
+                if (!provider) {
+                    console.log('❌ Provider not connected');
+                    return;
+                }
+                
+                console.log('📊 Getting contract stats...');
+                
+                const emotionBetAddress = '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc';
+                const emotionBetABI = [
+                    "function getStats() view returns (uint256 totalPool, uint256 winnersPool, uint256 totalBets, bool resolved, string winningDescription)"
+                ];
+                
+                const contract = new ethers.Contract(emotionBetAddress, emotionBetABI, provider);
+                const stats = await contract.getStats();
+                
+                // Update display
+                document.getElementById('stats-total-pool').textContent = 
+                    parseFloat(ethers.utils.formatEther(stats.totalPool)).toFixed(4);
+                document.getElementById('stats-winners-pool').textContent = 
+                    parseFloat(ethers.utils.formatEther(stats.winnersPool)).toFixed(4);
+                document.getElementById('stats-total-bets').textContent = stats.totalBets.toString();
+                document.getElementById('stats-resolved').textContent = stats.resolved ? 'Résolu' : 'En cours';
+                document.getElementById('stats-winning').textContent = stats.winningDescription || '-';
+                
+                // Show stats
+                document.getElementById('contract-stats').style.display = 'block';
+                
+                console.log('✅ Stats updated');
+                
+            } catch (error) {
+                console.error('❌ Error getting stats:', error);
+            }
+        }
+
+        // Vérifier si l'utilisateur est owner
+        async function checkOwnerStatus() {
+            try {
+                if (!provider || !walletAddress) return;
+                
+                const emotionBetAddress = '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc';
+                const emotionBetABI = ["function owner() view returns (address)"];
+                
+                const contract = new ethers.Contract(emotionBetAddress, emotionBetABI, provider);
+                const owner = await contract.owner();
+                const isOwner = owner.toLowerCase() === walletAddress.toLowerCase();
+                
+                // Show/hide owner section
+                const ownerSection = document.getElementById('owner-section');
+                if (isOwner) {
+                    ownerSection.style.display = 'block';
+                    document.getElementById('resolve-bet-btn').disabled = false;
+                    console.log('👑 User is contract owner');
+                } else {
+                    ownerSection.style.display = 'none';
+                    console.log('👤 User is not contract owner');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error checking owner status:', error);
+            }
+        }
+
+        // Résoudre le pari (Owner uniquement)
+        async function resolveBet() {
+            try {
+                if (!signer) {
+                    console.log('❌ Signer not connected');
+                    return;
+                }
+                
+                const winningDescription = document.getElementById('winning-description-input').value.trim();
+                if (!winningDescription) {
+                    console.log('❌ Please enter winning description');
+                    return;
+                }
+                
+                console.log(`⚖️ Resolving bet with: "${winningDescription}"`);
+                
+                const resolveStatus = document.getElementById('resolve-status');
+                resolveStatus.innerHTML = `
+                    <div style="color: #ff9800;">⏳ Resolving bet...</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        Transaction being processed...
+                    </div>
+                `;
+                
+                const emotionBetAddress = '0xA21a8923d128bf0CA1DdeD6E1350853389a13fAc';
+                const emotionBetABI = ["function resolveBet(string winningDescription)"];
+                
+                const contract = new ethers.Contract(emotionBetAddress, emotionBetABI, signer);
+                const tx = await contract.resolveBet(winningDescription);
+                console.log(`📤 Resolve transaction sent: ${tx.hash}`);
+                
+                resolveStatus.innerHTML = `
+                    <div style="color: #ff9800;">📤 Transaction sent</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        Hash: ${tx.hash.substring(0, 10)}...
+                    </div>
+                `;
+                
+                const receipt = await tx.wait();
+                console.log(`✅ Bet resolved! Block: ${receipt.blockNumber}`);
+                
+                resolveStatus.innerHTML = `
+                    <div style="color: #4ade80;">✅ Bet resolved successfully!</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        Winner: ${winningDescription}
+                    </div>
+                `;
+                
+                // Clear input and refresh stats
+                document.getElementById('winning-description-input').value = '';
+                await getContractStats();
+                await checkMyWinnings(); // Check if user has winnings
+                
+            } catch (error) {
+                console.error('❌ Error resolving bet:', error);
+                document.getElementById('resolve-status').innerHTML = `
+                    <div style="color: #f87171;">❌ Error resolving bet</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 0.8em;">
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Mise à jour du solde wallet
+        async function updateWalletBalance() {
+            if (provider && walletAddress) {
+                try {
+                    const balance = await provider.getBalance(walletAddress);
+                    walletBalanceSpan.textContent = parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
+                } catch (error) {
+                    console.error('Error updating wallet balance:', error);
+                }
+            }
+        }
+
+        // ✅ Event listeners pour les nouvelles fonctions
+        document.getElementById('check-winnings-btn').addEventListener('click', checkMyWinnings);
+        document.getElementById('claim-winnings-btn').addEventListener('click', claimWinnings);
+        document.getElementById('get-stats-btn').addEventListener('click', getContractStats);
+        document.getElementById('resolve-bet-btn').addEventListener('click', resolveBet);
     </script>
 </body>
 </html>

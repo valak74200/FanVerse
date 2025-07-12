@@ -202,7 +202,7 @@ export default function FanVersePage() {
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="w-full h-full pt-16"
               >
-                <Dashboard />
+                <Dashboard onClose={() => setShowDashboard(false)} />
               </motion.div>
             )}
           </AnimatePresence>
