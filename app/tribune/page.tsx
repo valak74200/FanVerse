@@ -72,6 +72,7 @@ import {
   Headset
 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import StadeViewer3D from "../components/fanverse/chiliz/StadeViewer3D"
 
 // Types
 interface User {
@@ -892,29 +893,11 @@ const WalletPanel = () => {
 }
 
 const Stadium3D = () => {
-  const [activeCamera, setActiveCamera] = useState('drone')
-  const [isVRMode, setIsVRMode] = useState(false)
-  const [weather, setWeather] = useState('sunny')
   const [isFullscreen, setIsFullscreen] = useState(false)
   
-  // Fixed player positions to avoid hydration mismatch
-  const playerPositions = [
-    // Team A (red)
-    { x: 15, y: 45 }, { x: 25, y: 30 }, { x: 25, y: 60 }, { x: 35, y: 25 },
-    { x: 35, y: 55 }, { x: 45, y: 40 }, { x: 55, y: 30 }, { x: 55, y: 60 },
-    { x: 65, y: 35 }, { x: 75, y: 45 }, { x: 85, y: 50 },
-    // Team B (blue)
-    { x: 20, y: 50 }, { x: 30, y: 35 }, { x: 30, y: 65 }, { x: 40, y: 30 },
-    { x: 40, y: 60 }, { x: 50, y: 45 }, { x: 60, y: 35 }, { x: 60, y: 65 },
-    { x: 70, y: 40 }, { x: 80, y: 50 }, { x: 90, y: 45 }
-  ]
-  
-  const cameraViews = [
-    { id: 'drone', name: 'Drone', icon: Camera, color: 'from-blue-500 to-blue-600' },
-    { id: 'ground', name: 'Terrain', icon: Eye, color: 'from-green-500 to-green-600' },
-    { id: 'tactical', name: 'Tactique', icon: Zap, color: 'from-purple-500 to-purple-600' },
-    { id: 'corner', name: 'Corner', icon: Trophy, color: 'from-yellow-500 to-yellow-600' }
-  ]
+  const handleToggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen)
+  }
   
   return (
     <div className="hud-panel-enhanced p-6 space-y-4">
@@ -932,215 +915,20 @@ const Stadium3D = () => {
         </div>
       </div>
       
-      <div className={`relative bg-gradient-to-b from-sky-900 via-sky-700 to-green-600 rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ${
+      <div className={`transition-all duration-500 ${
         isFullscreen ? 'h-[600px]' : 'h-96'
       }`}>
-        {/* Enhanced Stadium Background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/20"></div>
-        
-        {/* Weather Effects */}
-        {weather === 'rainy' && (
-          <div className="absolute inset-0 pointer-events-none">
-            {[...Array(50)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-0.5 h-8 bg-blue-200/30"
-                style={{
-                  left: `${(i * 2) % 100}%`,
-                  top: `${(i * 3) % 100}%`
-                }}
-                animate={{
-                  y: [0, 100],
-                  opacity: [0, 1, 0]
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  delay: i * 0.1
-                }}
-              />
-            ))}
-          </div>
-        )}
-        
-        {/* Stadium Structure */}
-        <div className="absolute bottom-0 left-0 right-0 h-72 bg-gradient-to-t from-green-600 via-green-500 to-green-400 rounded-b-xl">
-          {/* Enhanced Pitch */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-80 h-48 bg-gradient-to-br from-green-500 to-green-600 rounded-lg border-2 border-white/30 shadow-2xl">
-            {/* Pitch markings */}
-            <div className="absolute inset-2 border border-white/20 rounded"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-white/30 rounded-full"></div>
-            <div className="absolute top-1/2 left-0 w-0.5 h-full bg-white/20"></div>
-            
-            {/* Enhanced Players with fixed positions */}
-            {playerPositions.map((pos, i) => (
-              <motion.div
-                key={i}
-                className={`absolute w-3 h-3 rounded-full shadow-lg ${
-                  i < 11 ? 'bg-gradient-to-br from-red-500 to-red-700' : 'bg-gradient-to-br from-blue-500 to-blue-700'
-                }`}
-                style={{
-                  left: `${pos.x}%`,
-                  top: `${pos.y}%`
-                }}
-                animate={{
-                  x: [0, 5, -5, 0],
-                  y: [0, -5, 5, 0]
-                }}
-                transition={{
-                  duration: 4 + (i % 3),
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-            ))}
-            
-            {/* Ball */}
-            <motion.div
-              className="absolute w-2 h-2 bg-white rounded-full shadow-lg"
-              style={{ left: '45%', top: '40%' }}
-              animate={{
-                x: [0, 20, -10, 0],
-                y: [0, -15, 10, 0]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-          </div>
-          
-          {/* Enhanced Stands */}
-          <div className="absolute top-4 left-4 right-4 h-24 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-lg shadow-xl">
-            {/* Crowd animation */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-white/10 to-blue-500/20 rounded-lg"
-              animate={{
-                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-          </div>
-        </div>
-        
-        {/* Enhanced Floodlights */}
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-6 h-6 bg-yellow-400 rounded-full shadow-lg"
-            style={{
-              left: `${15 + i * 14}%`,
-              top: `${5 + Math.sin(i) * 3}%`
-            }}
-            animate={{
-              opacity: [0.8, 1, 0.8],
-              scale: [1, 1.1, 1]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              delay: i * 0.3
-            }}
-          />
-        ))}
-        
-        {/* Enhanced User Orbs with fixed positions */}
-        {[...Array(12)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-4 h-4 bg-gradient-to-br from-primary to-accent-comp rounded-full shadow-lg"
-            style={{
-              left: `${10 + i * 7}%`,
-              top: `${15 + (i % 3) * 8}%`
-            }}
-            animate={{
-              y: [0, -15, 0],
-              opacity: [0.6, 1, 0.6],
-              scale: [1, 1.2, 1]
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              delay: i * 0.2
-            }}
-          />
-        ))}
-        
-        {/* Enhanced Camera Controls */}
-        <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-          {cameraViews.map((view) => (
-            <motion.button
-              key={view.id}
-              onClick={() => setActiveCamera(view.id)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`px-4 py-2 rounded-lg font-bold transition-all duration-300 ${
-                activeCamera === view.id
-                  ? `bg-gradient-to-r ${view.color} text-white shadow-lg`
-                  : 'bg-black/50 text-gray-300 hover:bg-black/70'
-              }`}
-            >
-              <view.icon className="w-4 h-4 inline mr-2" />
-              {view.name}
-            </motion.button>
-          ))}
-        </div>
-        
-        {/* Control Panel */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
-          <motion.button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-bold transition-all duration-300 shadow-lg"
-          >
-            <Maximize className="w-4 h-4 inline mr-2" />
-            {isFullscreen ? 'Réduire' : 'Plein écran'}
-          </motion.button>
-          
-          <motion.button
-            onClick={() => setIsVRMode(!isVRMode)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-lg font-bold transition-all duration-300 shadow-lg"
-          >
-            <Maximize className="w-4 h-4 inline mr-2" />
-            {isVRMode ? 'Quitter VR' : 'Mode VR'}
-          </motion.button>
-        </div>
-        
-        {/* Weather Controls */}
-        <div className="absolute bottom-4 right-4 flex space-x-2">
-          {[
-            { id: 'sunny', label: '☀️ Ensoleillé', color: 'from-yellow-500 to-yellow-600' },
-            { id: 'rainy', label: '🌧️ Pluvieux', color: 'from-gray-500 to-gray-600' },
-            { id: 'night', label: '🌙 Nuit', color: 'from-indigo-600 to-indigo-700' }
-          ].map((w) => (
-            <button
-              key={w.id}
-              onClick={() => setWeather(w.id)}
-              className={`px-3 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-                weather === w.id
-                  ? `bg-gradient-to-r ${w.color} text-white shadow-lg`
-                  : 'bg-black/50 text-gray-300 hover:bg-black/70'
-              }`}
-            >
-              {w.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Stadium Info Overlay */}
-        <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm rounded-lg p-3 border border-primary/20">
-          <div className="text-white font-bold text-sm">Parc des Princes</div>
-          <div className="text-muted-foreground text-xs">47,929 spectateurs</div>
-          <div className="text-accent-comp text-xs">Ambiance: 🔥 Explosive</div>
-        </div>
+        <StadeViewer3D
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={handleToggleFullscreen}
+        />
+      </div>
+      
+      {/* Stadium Info Overlay */}
+      <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3 border border-primary/20">
+        <div className="text-white font-bold text-sm">Parc des Princes</div>
+        <div className="text-muted-foreground text-xs">47,929 spectateurs</div>
+        <div className="text-accent-comp text-xs">Ambiance: 🔥 Explosive</div>
       </div>
     </div>
   )
