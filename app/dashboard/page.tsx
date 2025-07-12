@@ -44,6 +44,12 @@ import {
 export default function Dashboard() {
   const [selectedChatGroup, setSelectedChatGroup] = useState("general")
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [userTokens, setUserTokens] = useState(1250)
+
+  const handleBetPlace = (betData: any) => {
+    console.log('Bet placed:', betData)
+    // Ici vous pouvez ajouter la logique pour traiter le pari
+  }
 
   const chatGroups = [
     { id: "general", name: "Chat Général", members: 1247, icon: MessageCircle, color: "bg-blue-500" },
@@ -349,7 +355,7 @@ export default function Dashboard() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <SocialBettingMVP />
+                      <SocialBettingMVP userTokens={userTokens} onBetPlace={handleBetPlace} />
                     </CardContent>
                   </GlassCard>
                 </motion.div>
