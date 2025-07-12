@@ -1,0 +1,20 @@
+{
+  "css.validate": false,
+  "less.validate": false,
+  "scss.validate": false,
+  "tailwindCSS.includeLanguages": {
+    "typescript": "typescript",
+    "typescriptreact": "typescriptreact",
+    "javascript": "javascript",
+    "javascriptreact": "javascriptreact"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["className\\s*=\\s*[\"'`]([^\"'`]*)[\"'`]"],
+    ["class\\s*=\\s*[\"'`]([^\"'`]*)[\"'`]"]
+  ],
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
+} 

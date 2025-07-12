@@ -1,0 +1,171 @@
+/* Animations avancées pour FanVerse */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(2deg); }
+  50% { transform: translateY(-5px) rotate(-1deg); }
+  75% { transform: translateY(-15px) rotate(1deg); }
+}
+
+@keyframes pulse-chiliz {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.7); }
+  50% { box-shadow: 0 0 0 10px rgba(255, 107, 53, 0); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes hex-float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+@keyframes glitch-chiliz {
+  0%   { 
+    clip-path: inset(20% 0 50% 0); 
+    text-shadow: -3px 0 #FF6B35, 3px 0 #00D4AA;
+  }
+  25%  { 
+    clip-path: inset(40% 0 20% 0); 
+    text-shadow: 3px 0 #FF4757, -3px 0 #5352ED;
+  }
+  50%  { 
+    clip-path: inset(20% 0 50% 0); 
+    text-shadow: -2px 0 #FFD23F, 2px 0 #16213E;
+  }
+  75%  { 
+    clip-path: inset(40% 0 20% 0); 
+    text-shadow: 2px 0 #00D4AA, -2px 0 #FF6B35;
+  }
+  100% { 
+    clip-path: inset(30% 0 40% 0); 
+    text-shadow: -3px 0 #FF6B35, 3px 0 #00D4AA;
+  }
+}
+
+@keyframes rotate-gradient {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes circuit-flow {
+  0% { transform: translateX(-100px); }
+  100% { transform: translateX(100px); }
+}
+
+@keyframes scan {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes rotate-hologram {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse-neon {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes glitch-1 {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+@keyframes glitch-2 {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(2px, -2px); }
+  40% { transform: translate(2px, 2px); }
+  60% { transform: translate(-2px, -2px); }
+  80% { transform: translate(-2px, 2px); }
+}
+
+/* Animations pour les composants spécifiques */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-chiliz {
+  animation: pulse-chiliz 2s infinite;
+}
+
+.animate-gradient {
+  animation: gradient-shift 15s ease infinite;
+}
+
+.animate-hex-float {
+  animation: hex-float 8s ease-in-out infinite;
+}
+
+.animate-glitch {
+  animation: glitch-chiliz 0.5s infinite;
+}
+
+.animate-rotate-gradient {
+  animation: rotate-gradient 4s linear infinite;
+}
+
+.animate-circuit-flow {
+  animation: circuit-flow 2s linear infinite;
+}
+
+.animate-scan {
+  animation: scan 8s linear infinite;
+}
+
+.animate-rotate-hologram {
+  animation: rotate-hologram 4s linear infinite;
+}
+
+.animate-pulse-neon {
+  animation: pulse-neon 2s ease-in-out infinite;
+}
+
+/* Transitions */
+.transition-all-300 {
+  transition: all 0.3s ease;
+}
+
+.transition-transform-300 {
+  transition: transform 0.3s ease;
+}
+
+.transition-colors-300 {
+  transition: colors 0.3s ease;
+}
+
+.transition-opacity-300 {
+  transition: opacity 0.3s ease;
+}
+
+/* Hover effects */
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-glow {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+}
+
+.hover-border {
+  transition: border-color 0.3s ease;
+}
+
+.hover-border:hover {
+  border-color: rgba(255, 107, 53, 0.6);
+}

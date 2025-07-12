@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -8,6 +9,10 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: ['images.pexels.com'],
+  },
+  experimental: {
+    appDir: false,
   },
 }
 
