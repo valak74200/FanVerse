@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, MotionConfig } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,6 +14,9 @@ import { NFTMarketplace } from "@/components/nft-marketplace"
 import { NFTCollection } from "@/components/nft-collection"
 import { EmotionPanel } from "@/components/stadium/EmotionPanel"
 import dynamic from "next/dynamic"
+import { FuturisticBackground } from "@/components/ui/FuturisticBackground"
+import { GlassCard } from "@/components/ui/GlassCard"
+import { FuturisticButton } from "@/components/ui/FuturisticButton"
 import GlitchText from "@/components/ui/GlitchText"
 import { 
   Users, 
@@ -46,6 +49,12 @@ import {
   LogOut,
   ShoppingCart
 } from "lucide-react"
+
+// Silk background with dynamic import to avoid SSR issues
+const SilkBackground = dynamic(() => import('@/components/ui/Silk'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black" />
+})
 
 // Charger VirtualStadium uniquement côté client
 const VirtualStadium = dynamic(() => import('@/components/stadium/VirtualStadium').then(mod => ({ default: mod.VirtualStadium })), {
@@ -588,177 +597,170 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-black overflow-hidden">
-      {/* Sidebar Toggle for Mobile */}
-      <button 
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-primary rounded-lg"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        {sidebarOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
-      </button>
-      
-      {/* Sidebar */}
-      <motion.div 
-        className="fixed md:relative z-40 h-full bg-gradient-to-b from-gray-900 to-black border-r border-primary/20"
-        initial={{ width: sidebarOpen ? 280 : 0 }}
-        animate={{ width: sidebarOpen ? 280 : 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex flex-col h-full p-4 overflow-y-auto">
-          {/* Logo */}
-          <div className="flex items-center space-x-3 mb-8 p-2">
-            <div className="w-12 h-12 bg-gradient-to-r from-primary to-warning rounded-xl flex items-center justify-center">
-              <Sparkles className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <GlitchText
-                className="text-2xl font-bold text-[#FF6B35]"
-                enableShadows={true}
-              >
-                FanVerse
-              </GlitchText>
-              <p className="text-xs text-gray-400">Web3 Sports Platform</p>
-            </div>
-          </div>
+    <MotionConfig reducedMotion="user">
+      <FuturisticBackground color="#FF6B35">
+        <div className="flex h-screen overflow-hidden">
+          {/* Sidebar Toggle for Mobile */}
+          <FuturisticButton 
+            className="md:hidden fixed top-4 left-4 z-50"
+            variant="primary"
+            size="sm"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+          </FuturisticButton>
           
-          {/* User Profile */}
-          <div className="mb-6 p-3 bg-black/40 rounded-lg border border-[#FF6B35]/20 hover:border-[#FF6B35]/40 transition-all duration-300">
-            <div className="flex items-center space-x-3">
-              <Avatar className="w-10 h-10 border-2 border-[#FF6B35]">
-                <AvatarFallback className="bg-gradient-to-r from-[#FF6B35] to-[#FFD23F] text-white">
-                  FV
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium text-white">FanVerse User</p>
-                <div className="flex items-center text-xs text-gray-400">
-                  <Coins className="w-3 h-3 mr-1 text-[#FFD23F]" />
-                  <span>{userTokens} CHZ</span>
+          {/* Sidebar */}
+          <motion.div 
+            className="fixed md:relative z-40 h-full backdrop-blur-xl border-r border-[#FF6B35]/20"
+            initial={{ width: sidebarOpen ? 280 : 0 }}
+            animate={{ width: sidebarOpen ? 280 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex flex-col h-full p-4 overflow-y-auto bg-black/60">
+              {/* Logo */}
+              <div className="flex items-center space-x-3 mb-8 p-2">
+                <div className="w-12 h-12 bg-gradient-to-r from-[#FF6B35] to-[#FFD23F] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(255,107,53,0.5)]">
+                  <Sparkles className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <GlitchText
+                    className="text-2xl font-bold text-[#FF6B35]"
+                    enableShadows={true}
+                  >
+                    FanVerse
+                  </GlitchText>
+                  <p className="text-xs text-gray-400">Web3 Sports Platform</p>
                 </div>
               </div>
-            </div>
-          </div>
-          
-          {/* Navigation */}
-          <div className="flex-1 space-y-2">
-            {sidebarItems.map((item) => (
-              <motion.div
-                key={item.id}
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.1 * sidebarItems.indexOf(item) }}
-              >
-                <Button
-                  variant={activeSection === item.id ? "default" : "ghost"}
-                  className={`w-full justify-start text-left h-12 relative overflow-hidden ${
-                    activeSection === item.id 
-                      ? "bg-gradient-to-r from-[#FF6B35] to-[#FFD23F]" 
-                      : "hover:bg-[#FF6B35]/10"
-                  }`}
-                  onClick={() => setActiveSection(item.id)}
-                >
-                  {/* Effet de brillance */}
-                  {activeSection === item.id && (
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                      initial={{ x: "-100%" }}
-                      animate={{ x: "100%" }}
-                      transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                    />
-                  )}
-                  
-                  <div className="flex items-center w-full relative z-10">
-                    <item.icon className="w-5 h-5 mr-3" />
-                    <span>{item.label}</span>
-                    {item.badge && (
-                      <Badge className="ml-auto bg-white/20 text-white">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </div>
-                </Button>
-              </motion.div>
-            ))}
-          </div>
-          
-          {/* Footer */}
-          <div className="mt-auto pt-4 border-t border-gray-800">
-            <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
-              <div className="flex items-center">
-                <Wifi className="w-3 h-3 mr-1 text-[#00D4AA]" />
-                <span>Connecté</span>
-              </div>
-              <div className="flex items-center">
-                <Shield className="w-3 h-3 mr-1" />
-                <span>Sécurisé</span>
-              </div>
-            </div>
-            <Button variant="outline" className="w-full justify-start text-left" size="sm">
-              <LogOut className="w-4 h-4 mr-2" />
-              Déconnexion
-            </Button>
-          </div>
-        </div>
-      </motion.div>
-      
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <motion.div 
-          className="md:hidden fixed inset-0 bg-black/70 z-30"
-          onClick={() => setSidebarOpen(false)}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        />
-      )}
-      
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gradient-to-br from-[#0F0F23] via-black to-[#0F0F23]">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <motion.div 
-            className="mb-6 flex items-center justify-between"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FF6B35] to-[#FFD23F] bg-clip-text text-transparent">
-                {sidebarItems.find(item => item.id === activeSection)?.label || "Dashboard"}
-              </h1>
-              <p className="text-gray-400">
-                {activeSection === "home" 
-                  ? "Bienvenue sur votre dashboard FanVerse" 
-                  : `Explorez ${sidebarItems.find(item => item.id === activeSection)?.label}`}
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <Badge className="bg-gradient-to-r from-[#FF6B35]/20 to-[#FFD23F]/20 border-[#FF6B35]/30 px-3 py-1.5">
-                <Flame className="w-4 h-4 mr-1 text-[#FFD23F]" />
-                <span className="font-medium">Match en direct</span>
-              </Badge>
               
-              <Button variant="outline" size="sm" className="border-gray-700 hover:border-[#FF6B35] hover:bg-[#FF6B35]/10 transition-colors">
-                <Settings className="w-4 h-4" />
-              </Button>
+              {/* User Profile */}
+              <GlassCard variant="primary" className="mb-6 p-3">
+                <div className="flex items-center space-x-3">
+                  <Avatar className="w-10 h-10 border-2 border-[#FF6B35]">
+                    <AvatarFallback className="bg-gradient-to-r from-[#FF6B35] to-[#FFD23F] text-white">
+                      FV
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium text-white">FanVerse User</p>
+                    <div className="flex items-center text-xs text-gray-400">
+                      <Coins className="w-3 h-3 mr-1 text-[#FFD23F]" />
+                      <span>{userTokens} CHZ</span>
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+              
+              {/* Navigation */}
+              <div className="flex-1 space-y-2">
+                {sidebarItems.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.1 * index }}
+                  >
+                    <FuturisticButton
+                      variant={activeSection === item.id ? "primary" : "ghost"}
+                      className={`w-full justify-start text-left h-12 ${
+                        activeSection === item.id ? "shadow-[0_0_15px_rgba(255,107,53,0.3)]" : ""
+                      }`}
+                      onClick={() => setActiveSection(item.id)}
+                    >
+                      <div className="flex items-center w-full">
+                        <item.icon className="w-5 h-5 mr-3" />
+                        <span>{item.label}</span>
+                        {item.badge && (
+                          <Badge className="ml-auto bg-white/20 text-white">
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </div>
+                    </FuturisticButton>
+                  </motion.div>
+                ))}
+              </div>
+              
+              {/* Footer */}
+              <div className="mt-auto pt-4 border-t border-[#FF6B35]/20">
+                <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+                  <div className="flex items-center">
+                    <Wifi className="w-3 h-3 mr-1 text-[#00D4AA]" />
+                    <span>Connecté</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Shield className="w-3 h-3 mr-1" />
+                    <span>Sécurisé</span>
+                  </div>
+                </div>
+                <FuturisticButton variant="outline" className="w-full justify-start text-left" size="sm">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Déconnexion
+                </FuturisticButton>
+              </div>
             </div>
           </motion.div>
           
-          {/* Dynamic Content */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeSection}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {renderContent()}
-            </motion.div>
-          </AnimatePresence>
+          {/* Mobile Overlay */}
+          {sidebarOpen && (
+            <motion.div 
+              className="md:hidden fixed inset-0 bg-black/70 z-30 backdrop-blur-sm"
+              onClick={() => setSidebarOpen(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+          )}
+          
+          {/* Main Content */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-7xl mx-auto">
+              {/* Header */}
+              <motion.div 
+                className="mb-6 flex items-center justify-between"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-[#FF6B35] to-[#FFD23F] bg-clip-text text-transparent">
+                    {sidebarItems.find(item => item.id === activeSection)?.label || "Dashboard"}
+                  </h1>
+                  <p className="text-gray-400">
+                    {activeSection === "home" 
+                      ? "Bienvenue sur votre dashboard FanVerse" 
+                      : `Explorez ${sidebarItems.find(item => item.id === activeSection)?.label}`}
+                  </p>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Badge className="bg-gradient-to-r from-[#FF6B35]/20 to-[#FFD23F]/20 border-[#FF6B35]/30 px-3 py-1.5">
+                    <Flame className="w-4 h-4 mr-1 text-[#FFD23F]" />
+                    <span className="font-medium">Match en direct</span>
+                  </Badge>
+                  
+                  <FuturisticButton variant="outline" size="sm">
+                    <Settings className="w-4 h-4" />
+                  </FuturisticButton>
+                </div>
+              </motion.div>
+              
+              {/* Dynamic Content */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeSection}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {renderContent()}
+                </motion.div>
+              </AnimatePresence>
+            </div>
         </div>
-      </div>
-    </div>
+      </FuturisticBackground>
+    </MotionConfig>
   )
 }

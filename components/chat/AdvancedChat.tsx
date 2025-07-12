@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Card } from "@/components/ui/card"
+import { motion } from "framer-motion"
+import { GlassCard } from "@/components/ui/GlassCard"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { FuturisticButton } from "@/components/ui/FuturisticButton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Send, Mic, MicOff, Volume2, Smile, ImageIcon, Crown, MessageCircle, Settings } from "lucide-react"
@@ -222,21 +223,21 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
     <div className="flex flex-col h-full">
       {/* Participants du chat vocal */}
       {isVoiceChatActive && (
-        <Card className="bg-gradient-to-r from-[#00D4AA]/20 to-[#00D4AA]/10 border-[#00D4AA]/30 p-3 mb-4">
+        <GlassCard variant="success" className="p-3 mb-4">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-sm font-medium text-[#00D4AA] flex items-center">
               <Volume2 className="w-4 h-4 mr-2 text-[#00D4AA]" />
               Chat Vocal ({voiceParticipants.length})
             </h4>
             <div className="flex items-center space-x-2">
-              <Button
+              <FuturisticButton
                 variant="outline"
                 size="sm"
                 onClick={() => setIsMuted(!isMuted)}
                 className={`border-[#00D4AA]/30 ${isMuted ? "bg-red-500/20 text-red-400" : "text-[#00D4AA]"}`}
               >
                 {isMuted ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
-              </Button>
+              </FuturisticButton>
             </div>
           </div>
 
@@ -257,11 +258,11 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
               </div>
             ))}
           </div>
-        </Card>
+        </GlassCard>
       )}
 
       {/* Messages */}
-      <Card className="flex-1 bg-[#1A1A2E] border-[#FF6B35]/20 p-4 overflow-hidden">
+      <GlassCard variant="primary" className="flex-1 p-4 overflow-hidden">
         <div className="h-full overflow-y-auto space-y-3">
           {messages.map((msg) => (
             <div key={msg.id} className="group">
@@ -284,20 +285,20 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                       {msg.isVip && <Crown className="w-3 h-3 text-yellow-400" />}
                       <span className="text-xs text-gray-500">{msg.timestamp}</span>
                       {msg.fanTokens && (
-                        <Badge className="bg-[#FF6B35]/20 text-[#FF6B35] text-xs">+{msg.fanTokens} CHZ</Badge>
+                        <Badge className="bg-[#FF6B35]/20 text-[#FF6B35] text-xs animate-pulse">+{msg.fanTokens} CHZ</Badge>
                       )}
                     </div>
 
                     <div
-                      className={`p-3 rounded-lg max-w-md ${
-                        msg.type === "voice" ? "bg-[#00D4AA]/20 border border-[#00D4AA]/30" : "bg-[#16213E]/50"
+                      className={`p-3 rounded-lg max-w-md backdrop-blur-sm ${
+                        msg.type === "voice" ? "bg-[#00D4AA]/20 border border-[#00D4AA]/30" : "bg-[#16213E]/30 border border-[#16213E]/50"
                       }`}
                     >
                       {msg.type === "voice" ? (
                         <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm" className="text-[#00D4AA] hover:bg-[#00D4AA]/20">
+                          <FuturisticButton variant="ghost" size="sm" className="text-[#00D4AA] hover:bg-[#00D4AA]/20">
                             <Volume2 className="w-4 h-4" />
-                          </Button>
+                          </FuturisticButton>
                           <span className="text-[#00D4AA]">{msg.message}</span>
                         </div>
                       ) : (
@@ -331,7 +332,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEmojiReaction(msg.id as number, emoji)}
-                            className="h-6 w-6 p-0 text-xs hover:bg-[#16213E]"
+                            className="h-6 w-6 p-0 text-xs hover:bg-[#16213E] hover:scale-110 transition-transform"
                           >
                             {emoji}
                           </Button>
@@ -345,10 +346,10 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
           ))}
           <div ref={messagesEndRef} />
         </div>
-      </Card>
+      </GlassCard>
 
       {/* Zone de saisie */}
-      <Card className="bg-[#1A1A2E] border-[#FF6B35]/20 p-4 mt-4">
+      <GlassCard variant="primary" className="p-4 mt-4">
         <div className="flex items-center space-x-2">
           <div className="flex-1 relative">
             <Input
@@ -361,27 +362,27 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
 
             {/* Boutons dans l'input */}
             <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-              <Button
+              <FuturisticButton
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 className="h-6 w-6 p-0 text-gray-400 hover:text-[#FFD23F]"
               >
                 <Smile className="w-4 h-4" />
-              </Button>
-              <Button
+              </FuturisticButton>
+              <FuturisticButton
                 variant="ghost"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 className="h-6 w-6 p-0 text-gray-400 hover:text-[#00D4AA]"
               >
                 <ImageIcon className="w-4 h-4" />
-              </Button>
+              </FuturisticButton>
             </div>
           </div>
 
           {/* Bouton vocal */}
-          <Button
+          <FuturisticButton
             variant="outline"
             size="sm"
             onMouseDown={handleVoiceRecord}
@@ -391,15 +392,15 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
             }`}
           >
             {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-          </Button>
+          </FuturisticButton>
 
           {/* Bouton d'envoi */}
-          <Button
+          <FuturisticButton
+            variant="primary"
             onClick={handleSendMessage}
-            className="bg-gradient-to-r from-[#FF6B35] to-[#FFD23F] hover:shadow-[0_0_15px_rgba(255,107,53,0.4)] transition-all duration-300"
           >
             <Send className="w-4 h-4" />
-          </Button>
+          </FuturisticButton>
         </div>
 
         {/* Picker d'emojis */}
@@ -415,7 +416,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                     setNewMessage((prev) => prev + emoji)
                     setShowEmojiPicker(false)
                   }}  
-                  className="h-8 w-8 p-0 text-lg hover:bg-[#FF6B35]/20"
+                  className="h-8 w-8 p-0 text-lg hover:bg-[#FF6B35]/20 hover:scale-110 transition-transform"
                 >
                   {emoji}
                 </Button>
@@ -435,7 +436,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
             console.log("File selected:", e.target.files?.[0])
           }}
         />
-      </Card>
+      </GlassCard>
     </div>
   )
 }
