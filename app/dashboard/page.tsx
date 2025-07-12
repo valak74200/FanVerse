@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { SocialBettingMVP } from "@/components/social-betting-mvp"
 import { AdvancedChat } from "@/components/chat/AdvancedChat"
@@ -65,6 +66,7 @@ export default function Dashboard() {
   const [emotionLevel, setEmotionLevel] = useState(45)
   const [crowdVolume, setCrowdVolume] = useState(75)
   const [activeSection, setActiveSection] = useState("home")
+  const [selectedChatGroup, setSelectedChatGroup] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   
   const liveStats = {
@@ -87,13 +89,26 @@ export default function Dashboard() {
   const sidebarItems = [
     { id: "home", label: "Accueil", icon: Home, badge: null },
     { id: "stadium", label: "Stade Virtuel", icon: Trophy, badge: "LIVE" },
-    { id: "social", label: "Chat Social", icon: MessageCircle, badge: null },
     { id: "betting", label: "Paris & Prédictions", icon: Zap, badge: null },
     { id: "nft-marketplace", label: "NFT Marketplace", icon: ShoppingCart, badge: "HOT" },
     { id: "nft-collection", label: "Ma Collection", icon: Star, badge: null },
     { id: "nft-moments", label: "Moments NFT", icon: Sparkles, badge: "NEW" },
     { id: "staking", label: "Staking CHZ", icon: Lock, badge: null },
     { id: "settings", label: "Paramètres", icon: Settings, badge: null },
+  ]
+
+  const topFans = [
+    { name: "CryptoFan", tokens: 15420, rank: 1 },
+    { name: "SportsBetter", tokens: 12890, rank: 2 },
+    { name: "NFTCollector", tokens: 11200, rank: 3 }
+  ]
+
+  const chatGroups = [
+    { id: "general", name: "Chat Général", members: 2847, icon: "🌐" },
+    { id: "psg-fans", name: "PSG Ultras", members: 1245, icon: "🔵" },
+    { id: "barca-fans", name: "Barça Supporters", members: 987, icon: "🔴" },
+    { id: "betting-pros", name: "Paris Experts", members: 456, icon: "💰" },
+    { id: "nft-collectors", name: "NFT Collectionneurs", members: 321, icon: "🖼️" }
   ]
 
   const renderContent = () => {
@@ -115,7 +130,7 @@ export default function Dashboard() {
                   <div className="flex flex-col md:items-end gap-4">
                     <Badge className="px-4 py-2 text-lg bg-gradient-to-r from-primary/20 to-warning/20 border-primary/30">
                       <Coins className="w-5 h-5 mr-2 text-warning" />
-                      <span className="font-bold text-warning">{userTokens} CHZ</span>
+                      <span className="font-bold text-warning">{userTokens.toLocaleString()} CHZ</span>
                     </Badge>
                     <Button 
                       onClick={() => setIsConnected(!isConnected)}
@@ -163,31 +178,113 @@ export default function Dashboard() {
             
             {/* Featured Sections */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {sidebarItems.slice(1, 5).map((item, index) => (
-                <Card 
-                  key={item.id}
-                  className="p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20 hover:border-primary/40 transition-all duration-300 cursor-pointer group"
-                  onClick={() => setActiveSection(item.id)}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-3 rounded-xl bg-gradient-to-r from-primary/20 to-warning/20 group-hover:from-primary group-hover:to-warning transition-all duration-300">
-                        <item.icon className="w-6 h-6 text-white" />
-                      </div>
-                      <h3 className="text-xl font-bold text-white">{item.label}</h3>
+              <Card 
+                className="p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20 hover:border-primary/40 transition-all duration-300 cursor-pointer group"
+                onClick={() => setActiveSection("stadium")}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-primary/20 to-warning/20 group-hover:from-primary group-hover:to-warning transition-all duration-300">
+                      <Trophy className="w-6 h-6 text-white" />
                     </div>
-                    {item.badge && (
-                      <Badge className="bg-primary text-white">
-                        {item.badge}
-                      </Badge>
-                    )}
+                    <h3 className="text-xl font-bold text-white">Stade Virtuel</h3>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-gray-400">Accéder à {item.label}</p>
-                    <ChevronRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
+                  <Badge className="bg-primary text-white">
+                    LIVE
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-gray-400">Accéder à Stade Virtuel</p>
+                  <ChevronRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Card>
+              <Card 
+                className="p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20 hover:border-primary/40 transition-all duration-300 cursor-pointer group"
+                onClick={() => setActiveSection("betting")}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-primary/20 to-warning/20 group-hover:from-primary group-hover:to-warning transition-all duration-300">
+                      <Zap className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white">Paris & Prédictions</h3>
                   </div>
-                </Card>
-              ))}
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-gray-400">Accéder à Paris & Prédictions</p>
+                  <ChevronRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Card>
+              <Card 
+                className="p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20 hover:border-primary/40 transition-all duration-300 cursor-pointer group"
+                onClick={() => setActiveSection("nft-marketplace")}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-primary/20 to-warning/20 group-hover:from-primary group-hover:to-warning transition-all duration-300">
+                      <ShoppingCart className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white">NFT Marketplace</h3>
+                  </div>
+                  <Badge className="bg-primary text-white">
+                    HOT
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-gray-400">Accéder à NFT Marketplace</p>
+                  <ChevronRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Card>
+              <Card 
+                className="p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20 hover:border-primary/40 transition-all duration-300 cursor-pointer group"
+                onClick={() => setActiveSection("nft-moments")}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-primary/20 to-warning/20 group-hover:from-primary group-hover:to-warning transition-all duration-300">
+                      <Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white">Moments NFT</h3>
+                  </div>
+                  <Badge className="bg-primary text-white">
+                    NEW
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-gray-400">Accéder à Moments NFT</p>
+                  <ChevronRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Card>
+            </div>
+            
+            {/* Chat Groups */}
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold mb-4 flex items-center">
+                <MessageCircle className="w-6 h-6 mr-2 text-primary" />
+                Groupes de discussion
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {chatGroups.map(group => (
+                  <Card 
+                    key={group.id}
+                    className="p-4 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20 hover:border-primary/40 transition-all duration-300 cursor-pointer"
+                    onClick={() => {
+                      setSelectedChatGroup(group.id);
+                      setActiveSection("stadium");
+                    }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-primary/20 to-warning/20 rounded-full flex items-center justify-center text-xl">
+                        {group.icon}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white">{group.name}</h3>
+                        <p className="text-xs text-gray-400">{group.members} membres</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
             </div>
           </div>
         )
@@ -197,48 +294,45 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="lg:col-span-2 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20 overflow-hidden">
                 <div className="h-[600px]">
-                  <VirtualStadium className="w-full h-full" />
+                  <VirtualStadium className="w-full h-full" />                  
                 </div>
               </Card>
               
               <div className="space-y-6">
-                <Card className="h-[400px] p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20">
+                <Card className="h-[600px] p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-bold bg-gradient-to-r from-primary to-warning bg-clip-text text-transparent">
-                      Chat en direct
+                      {selectedChatGroup ? chatGroups.find(g => g.id === selectedChatGroup)?.name : "Chat en direct"}
                     </h3>
-                    <Badge className="bg-success/20 text-success border-success/30">
-                      {liveStats.activeUsers} en ligne
-                    </Badge>
+                    <div className="flex items-center space-x-2">
+                      <select 
+                        className="bg-black/30 border border-gray-700 rounded text-white text-sm p-1"
+                        value={selectedChatGroup || "general"}
+                        onChange={(e) => setSelectedChatGroup(e.target.value)}
+                      >
+                        {chatGroups.map(group => (
+                          <option key={group.id} value={group.id}>
+                            {group.icon} {group.name}
+                          </option>
+                        ))}
+                      </select>
+                      <Badge className="bg-success/20 text-success border-success/30">
+                        {selectedChatGroup 
+                          ? chatGroups.find(g => g.id === selectedChatGroup)?.members 
+                          : liveStats.activeUsers} en ligne
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="h-[320px]">
-                    <AdvancedChat chatType="general" />
+                  <div className="h-[520px]">
+                    <AdvancedChat 
+                      chatType={selectedChatGroup && selectedChatGroup !== "general" ? "group" : "general"} 
+                      groupId={selectedChatGroup !== "general" ? selectedChatGroup : undefined}
+                    />
                   </div>
-                </Card>
-                
-                <Card className="p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20">
-                  <EmotionPanel />
                 </Card>
               </div>
             </div>
           </div>
-        )
-      case "social":
-        return (
-          <Card className="h-[700px] p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-warning bg-clip-text text-transparent">
-                  Chat Social
-                </h1>
-                <p className="text-gray-400 mt-1">Discussions en temps réel avec la communauté</p>
-              </div>
-              <Badge className="bg-success/20 text-success border-success/30 animate-pulse">
-                {liveStats.activeUsers} en ligne
-              </Badge>
-            </div>
-            <AdvancedChat chatType="general" />
-          </Card>
         )
       case "betting":
         return (
@@ -386,14 +480,14 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between p-4 bg-black/40 rounded-lg border border-gray-800">
                     <div>
                       <p className="font-medium">Notifications</p>
-                      <p className="text-sm text-gray-400">Recevoir des alertes pour les événements</p>
+                      <p className="text-sm text-gray-400">Alertes pour les événements</p>
                     </div>
                     <Button variant="outline">Configurer</Button>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-black/40 rounded-lg border border-gray-800">
                     <div>
                       <p className="font-medium">Langue</p>
-                      <p className="text-sm text-gray-400">Français</p>
+                      <p className="text-sm text-gray-400">Français (FR)</p>
                     </div>
                     <Button variant="outline">Changer</Button>
                   </div>
@@ -405,7 +499,7 @@ export default function Dashboard() {
               <div className="flex justify-end">
                 <Button variant="destructive" className="flex items-center">
                   <LogOut className="w-4 h-4 mr-2" />
-                  Déconnexion
+                  Se déconnecter
                 </Button>
               </div>
             </div>
@@ -447,7 +541,7 @@ export default function Dashboard() {
               <Sparkles className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-warning bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-warning bg-clip-text text-transparent animate-pulse">
                 FanVerse
               </h1>
               <p className="text-xs text-gray-400">Web3 Sports Platform</p>
@@ -475,26 +569,31 @@ export default function Dashboard() {
           {/* Navigation */}
           <div className="flex-1 space-y-2">
             {sidebarItems.map((item) => (
-              <Button
+              <motion.div
                 key={item.id}
-                variant={activeSection === item.id ? "default" : "ghost"}
-                className={`w-full justify-start text-left h-12 ${
-                  activeSection === item.id 
-                    ? "bg-gradient-to-r from-primary to-warning" 
-                    : "hover:bg-primary/10"
-                }`}
-                onClick={() => setActiveSection(item.id)}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
               >
-                <div className="flex items-center w-full">
-                  <item.icon className="w-5 h-5 mr-3" />
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <Badge className="ml-auto bg-white/20 text-white">
-                      {item.badge}
-                    </Badge>
-                  )}
-                </div>
-              </Button>
+                <Button
+                  variant={activeSection === item.id ? "default" : "ghost"}
+                  className={`w-full justify-start text-left h-12 ${
+                    activeSection === item.id 
+                      ? "bg-gradient-to-r from-primary to-warning" 
+                      : "hover:bg-primary/10"
+                  }`}
+                  onClick={() => setActiveSection(item.id)}
+                >
+                  <div className="flex items-center w-full">
+                    <item.icon className="w-5 h-5 mr-3" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <Badge className="ml-auto bg-white/20 text-white">
+                        {item.badge}
+                      </Badge>
+                    )}
+                  </div>
+                </Button>
+              </motion.div>
             ))}
           </div>
           
@@ -502,8 +601,17 @@ export default function Dashboard() {
           <div className="mt-auto pt-4 border-t border-gray-800">
             <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
               <div className="flex items-center">
-                <Wifi className="w-3 h-3 mr-1 text-success" />
-                <span>Connecté</span>
+                {isConnected ? (
+                  <>
+                    <Wifi className="w-3 h-3 mr-1 text-success" />
+                    <span>Connecté</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-3 h-3 mr-1 text-red-500" />
+                    <span>Déconnecté</span>
+                  </>
+                )}
               </div>
               <div className="flex items-center">
                 <Shield className="w-3 h-3 mr-1" />
@@ -512,7 +620,7 @@ export default function Dashboard() {
             </div>
             <Button variant="outline" className="w-full justify-start text-left" size="sm">
               <LogOut className="w-4 h-4 mr-2" />
-              Déconnexion
+              Se déconnecter
             </Button>
           </div>
         </div>
@@ -530,7 +638,7 @@ export default function Dashboard() {
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-white">
                 {sidebarItems.find(item => item.id === activeSection)?.label || "Dashboard"}
@@ -542,11 +650,18 @@ export default function Dashboard() {
               </p>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 flex-wrap gap-2">
               <Badge className="bg-gradient-to-r from-primary/20 to-warning/20 border-primary/30 px-3 py-1.5">
                 <Flame className="w-4 h-4 mr-1 text-warning" />
                 <span className="font-medium">Match en direct</span>
               </Badge>
+              
+              {activeSection === "stadium" && (
+                <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30 px-3 py-1.5">
+                  <Users className="w-4 h-4 mr-1 text-green-400" />
+                  <span className="font-medium">{liveStats.activeUsers.toLocaleString()} fans</span>
+                </Badge>
+              )}
               
               <Button variant="outline" size="sm" className="border-gray-700">
                 <Settings className="w-4 h-4" />
@@ -556,6 +671,13 @@ export default function Dashboard() {
           
           {/* Dynamic Content */}
           {renderContent()}
+          
+          {/* Emotion Panel for Stadium */}
+          {activeSection === "stadium" && (
+            <Card className="mt-6 p-6 bg-gradient-to-br from-gray-900/95 via-black/90 to-gray-800/95 border-primary/20">
+              <EmotionPanel />
+            </Card>
+          )}
         </div>
       </div>
     </div>
