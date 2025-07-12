@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FanVerse - Testeur de Contrats Complet</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 50%, #0a0a0a 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 26, 26, 0.8);
+            border-radius: 20px;
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1, h2, h3 {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        
+        .section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(42, 26, 42, 0.5);
+            border-radius: 15px;
+            border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        .card {
+            background: rgba(16, 16, 16, 0.8);
+            border-radius: 10px;
+            padding: 1rem;
+            border: 1px solid rgba(147, 51, 234, 0.3);
+        }
+        
+        .button {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(147, 51, 234, 0.3);
+        }
+        
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .input, .select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border: 1px solid #555;
+            background: #2a2a2a;
+            color: white;
+        }
+        
+        .info-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+        
+        .error-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+        
+        .logs {
+            background: #000;
+            padding: 1rem;
+            border-radius: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+            border: 1px solid #333;
+        }
+        
+        .status-connected {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .status-disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .contract-address {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.5rem;
+            border-radius: 5px;
+            word-break: break-all;
+            margin: 0.5rem 0;
+            border: 1px solid #444;
+        }
+        
+        .function-group {
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .read-function {
+            border-left: 4px solid #10b981;
+        }
+        
+        .write-function {
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .owner-function {
+            border-left: 4px solid #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 FanVerse - Testeur de Contrats Complet</h1>
+        <p>Interface de test pour toutes les fonctions des contrats EmotionBet et AttendanceNFT</p>
+        
+        <!-- Section Wallet -->
+        <div class="section">
+            <h2>🔗 Connexion Wallet</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Statut de connexion</h3>
+                    <div id="wallet-status">
+                        <span class="status-disconnected">Non connecté</span>
+                    </div>
+                    <button class="button" onclick="connectWallet()">Se connecter au testnet</button>
+                    <div id="wallet-info" style="display: none;">
+                        <div class="info-box">
+                            <strong>Adresse:</strong>
+                            <div class="contract-address" id="wallet-address"></div>
+                            <strong>Balance:</strong>
+                            <div id="wallet-balance">0 CHZ</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Configuration réseau</h3>
+                    <div class="info-box">
+                        <strong>Réseau:</strong> Chiliz Spicy Testnet<br>
+                        <strong>Chain ID:</strong> 88882<br>
+                        <strong>RPC:</strong> https://spicy-rpc.chiliz.com/
+                    </div>
+                    <button class="button" onclick="addTestnetNetwork()">Ajouter le réseau</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section EmotionBet -->
+        <div class="section">
+            <h2>🎲 EmotionBet Contract</h2>
+            
+            <div class="card">
+                <h3>Configuration du contrat</h3>
+                <label>Adresse du contrat EmotionBet:</label>
+                <input type="text" id="emotionbet-address" class="input" placeholder="0x...">
+                <button class="button" onclick="connectEmotionBet()">Connecter au contrat</button>
+                <div id="emotionbet-status"></div>
+            </div>
+
+            <!-- Fonctions de lecture EmotionBet -->
+            <div class="function-group read-function">
+                <h3>📖 Fonctions de lecture (gratuites)</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>owner()</h4>
+                        <p>Récupère l'adresse du propriétaire</p>
+                        <button class="button" onclick="getEmotionBetOwner()">Obtenir owner</button>
+                        <div id="emotionbet-owner-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>closed()</h4>
+                        <p>Vérifie si les paris sont fermés</p>
+                        <button class="button" onclick="getEmotionBetClosed()">Vérifier statut</button>
+                        <div id="emotionbet-closed-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>getBetCount()</h4>
+                        <p>Nombre total de paris</p>
+                        <button class="button" onclick="getEmotionBetCount()">Compter les paris</button>
+                        <div id="emotionbet-count-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>getAllBets()</h4>
+                        <p>Liste tous les paris</p>
+                        <button class="button" onclick="getAllEmotionBets()">Lister tous les paris</button>
+                        <div id="emotionbet-allbets-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>bets(index)</h4>
+                        <p>Récupère un pari spécifique</p>
+                        <input type="number" id="bet-index" class="input" placeholder="Index du pari (0, 1, 2...)">
+                        <button class="button" onclick="getEmotionBetByIndex()">Obtenir pari</button>
+                        <div id="emotionbet-single-result"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fonctions d'écriture EmotionBet -->
+            <div class="function-group write-function">
+                <h3>✍️ Fonctions d'écriture (coûtent du gas)</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>placeBet(description)</h4>
+                        <p>Placer un nouveau pari</p>
+                        <input type="text" id="bet-description" class="input" placeholder="Description du pari">
+                        <input type="number" id="bet-amount" class="input" placeholder="Montant en CHZ" step="0.01">
+                        <button class="button" onclick="placeEmotionBet()">Placer le pari</button>
+                        <div id="emotionbet-place-result"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fonctions owner EmotionBet -->
+            <div class="function-group owner-function">
+                <h3>👑 Fonctions owner uniquement</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>endBet()</h4>
+                        <p>Fermer les paris (owner seulement)</p>
+                        <button class="button" onclick="endEmotionBets()">Fermer les paris</button>
+                        <div id="emotionbet-end-result"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section AttendanceNFT -->
+        <div class="section">
+            <h2>🎨 AttendanceNFT Contract</h2>
+            
+            <div class="card">
+                <h3>Configuration du contrat</h3>
+                <label>Adresse du contrat AttendanceNFT:</label>
+                <input type="text" id="attendancenft-address" class="input" placeholder="0x...">
+                <button class="button" onclick="connectAttendanceNFT()">Connecter au contrat</button>
+                <div id="attendancenft-status"></div>
+            </div>
+
+            <!-- Fonctions de lecture AttendanceNFT -->
+            <div class="function-group read-function">
+                <h3>📖 Fonctions de lecture (gratuites)</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>owner()</h4>
+                        <p>Récupère l'adresse du propriétaire</p>
+                        <button class="button" onclick="getAttendanceNFTOwner()">Obtenir owner</button>
+                        <div id="attendancenft-owner-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>nextTokenId()</h4>
+                        <p>Prochain ID de token</p>
+                        <button class="button" onclick="getNextTokenId()">Obtenir nextTokenId</button>
+                        <div id="attendancenft-nexttokenid-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>getTotalSupply()</h4>
+                        <p>Nombre total de NFTs</p>
+                        <button class="button" onclick="getTotalSupply()">Obtenir total supply</button>
+                        <div id="attendancenft-totalsupply-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>getUserNFTs(address)</h4>
+                        <p>NFTs possédés par une adresse</p>
+                        <input type="text" id="user-address" class="input" placeholder="Adresse utilisateur (0x...)">
+                        <button class="button" onclick="getUserNFTs()">Obtenir NFTs utilisateur</button>
+                        <div id="attendancenft-usernfts-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>tokenOwner(tokenId)</h4>
+                        <p>Propriétaire d'un NFT</p>
+                        <input type="number" id="token-owner-id" class="input" placeholder="Token ID">
+                        <button class="button" onclick="getTokenOwner()">Obtenir propriétaire</button>
+                        <div id="attendancenft-tokenowner-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>getNFTMetadata(tokenId)</h4>
+                        <p>Métadonnées d'un NFT</p>
+                        <input type="number" id="metadata-token-id" class="input" placeholder="Token ID">
+                        <button class="button" onclick="getNFTMetadata()">Obtenir métadonnées</button>
+                        <div id="attendancenft-metadata-result"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fonctions de mint AttendanceNFT -->
+            <div class="function-group owner-function">
+                <h3>👑 Fonctions de mint (owner seulement)</h3>
+                
+                <!-- Formulaire commun pour les mints -->
+                <div class="card">
+                    <h4>Paramètres pour mint</h4>
+                    <input type="text" id="mint-to-address" class="input" placeholder="Adresse destinataire (0x...)">
+                    <input type="text" id="mint-event-name" class="input" placeholder="Nom de l'événement (ex: PSG vs Barcelona)">
+                    <input type="text" id="mint-event-date" class="input" placeholder="Date de l'événement (ex: 2024-01-15)">
+                    <input type="text" id="mint-event-type" class="input" placeholder="Type d'événement (ex: match)">
+                    <input type="number" id="mint-attendance-count" class="input" placeholder="Nombre de participants">
+                </div>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h4>mintCommonNFT()</h4>
+                        <p>Mint un NFT Common</p>
+                        <button class="button" onclick="mintCommonNFT()">Mint Common</button>
+                        <div id="mint-common-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>mintRareNFT()</h4>
+                        <p>Mint un NFT Rare</p>
+                        <button class="button" onclick="mintRareNFT()">Mint Rare</button>
+                        <div id="mint-rare-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>mintEpicNFT()</h4>
+                        <p>Mint un NFT Epic</p>
+                        <button class="button" onclick="mintEpicNFT()">Mint Epic</button>
+                        <div id="mint-epic-result"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>mintLegendaryNFT()</h4>
+                        <p>Mint un NFT Legendary</p>
+                        <button class="button" onclick="mintLegendaryNFT()">Mint Legendary</button>
+                        <div id="mint-legendary-result"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Tests rapides -->
+        <div class="section">
+            <h2>⚡ Tests rapides</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Test EmotionBet complet</h3>
+                    <p>Teste toutes les fonctions d'EmotionBet</p>
+                    <button class="button" onclick="testEmotionBetComplete()">Tester EmotionBet</button>
+                </div>
+                
+                <div class="card">
+                    <h3>Test AttendanceNFT complet</h3>
+                    <p>Teste toutes les fonctions d'AttendanceNFT</p>
+                    <button class="button" onclick="testAttendanceNFTComplete()">Tester AttendanceNFT</button>
+                </div>
+                
+                <div class="card">
+                    <h3>Test d'intégration</h3>
+                    <p>Teste les deux contrats ensemble</p>
+                    <button class="button" onclick="testIntegrationComplete()">Tester intégration</button>
+                </div>
+                
+                <div class="card">
+                    <h3>Effacer les logs</h3>
+                    <p>Nettoie l'historique des logs</p>
+                    <button class="button" onclick="clearLogs()">Effacer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Logs -->
+        <div class="section">
+            <h2>📋 Logs d'activité</h2>
+            <div class="logs" id="logs"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration du testnet Chiliz
+        const TESTNET_CONFIG = {
+            chainId: '0x15b32', // 88882 en hex
+            chainName: 'Chiliz Spicy Testnet',
+            nativeCurrency: {
+                name: 'Chiliz',
+                symbol: 'CHZ',
+                decimals: 18
+            },
+            rpcUrls: ['https://spicy-rpc.chiliz.com/'],
+            blockExplorerUrls: ['https://testnet.chiliscan.com/']
+        };
+
+        // ABI des contrats
+        const EMOTION_BET_ABI = [
+            "function owner() view returns (address)",
+            "function bets(uint256) view returns (address user, string description, uint96 amount)",
+            "function closed() view returns (bool)",
+            "function placeBet(string description) payable",
+            "function endBet()",
+            "function getAllBets() view returns (tuple(address user, string description, uint96 amount)[])",
+            "function getBetCount() view returns (uint256)",
+            "event BetPlaced(address indexed user, string description, uint96 amount)"
+        ];
+
+        const ATTENDANCE_NFT_ABI = [
+            "function owner() view returns (address)",
+            "function nextTokenId() view returns (uint256)",
+            "function nftMetadata(uint256) view returns (tuple(string eventName, string eventDate, string eventType, string rarity, string imageUrl, uint32 attendanceCount, uint64 timestamp))",
+            "function userNFTs(address, uint256) view returns (uint256)",
+            "function tokenOwner(uint256) view returns (address)",
+            "function getTotalSupply() view returns (uint256)",
+            "function getUserNFTs(address user) view returns (uint256[])",
+            "function getNFTMetadata(uint256 tokenId) view returns (tuple(string eventName, string eventDate, string eventType, string rarity, string imageUrl, uint32 attendanceCount, uint64 timestamp))",
+            "function mintCommonNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount) returns (uint256)",
+            "function mintRareNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount) returns (uint256)",
+            "function mintEpicNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount) returns (uint256)",
+            "function mintLegendaryNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount) returns (uint256)",
+            "event NFTMinted(address indexed to, uint256 indexed tokenId, string rarity)"
+        ];
+
+        // Variables globales
+        let provider = null;
+        let signer = null;
+        let walletAddress = null;
+        let emotionBetContract = null;
+        let attendanceNFTContract = null;
+
+        // Fonction de logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#64b5f6',
+                success: '#4caf50',
+                error: '#f44336',
+                warning: '#ff9800'
+            };
+            
+            const logsDiv = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            logEntry.style.color = colors[type];
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        // Connexion au wallet
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    log('❌ MetaMask non détecté!', 'error');
+                    return;
+                }
+
+                log('🔄 Connexion au wallet...', 'info');
+
+                // Ajouter/changer vers le testnet
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: TESTNET_CONFIG.chainId }]
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [TESTNET_CONFIG]
+                        });
+                    }
+                }
+
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+
+                walletAddress = accounts[0];
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+
+                const balance = await provider.getBalance(walletAddress);
+                
+                log(`✅ Wallet connecté: ${walletAddress}`, 'success');
+                log(`💰 Balance: ${ethers.utils.formatEther(balance)} CHZ`, 'info');
+                
+                updateWalletDisplay();
+
+            } catch (error) {
+                log(`❌ Erreur connexion: ${error.message}`, 'error');
+            }
+        }
+
+        function updateWalletDisplay() {
+            const statusElement = document.getElementById('wallet-status');
+            const walletInfo = document.getElementById('wallet-info');
+            const addressElement = document.getElementById('wallet-address');
+
+            if (walletAddress) {
+                statusElement.innerHTML = '<span class="status-connected">Connecté</span>';
+                addressElement.textContent = walletAddress;
+                walletInfo.style.display = 'block';
+                
+                // Mettre à jour la balance
+                updateBalance();
+            }
+        }
+
+        async function updateBalance() {
+            if (provider && walletAddress) {
+                try {
+                    const balance = await provider.getBalance(walletAddress);
+                    document.getElementById('wallet-balance').textContent = 
+                        `${ethers.utils.formatEther(balance)} CHZ`;
+                } catch (error) {
+                    console.error('Erreur mise à jour balance:', error);
+                }
+            }
+        }
+
+        async function addTestnetNetwork() {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [TESTNET_CONFIG]
+                });
+                log('✅ Réseau testnet ajouté!', 'success');
+            } catch (error) {
+                log(`❌ Erreur ajout réseau: ${error.message}`, 'error');
+            }
+        }
+
+        // Fonctions EmotionBet
+        async function connectEmotionBet() {
+            try {
+                const address = document.getElementById('emotionbet-address').value.trim();
+                if (!address) {
+                    log('❌ Veuillez entrer l\'adresse du contrat EmotionBet', 'error');
+                    return;
+                }
+
+                if (!signer) {
+                    log('❌ Veuillez d\'abord connecter votre wallet', 'error');
+                    return;
+                }
+
+                emotionBetContract = new ethers.Contract(address, EMOTION_BET_ABI, signer);
+                
+                // Test de connexion
+                const owner = await emotionBetContract.owner();
+                log(`✅ EmotionBet connecté: ${address}`, 'success');
+                log(`👤 Owner: ${owner}`, 'info');
+                
+                document.getElementById('emotionbet-status').innerHTML = 
+                    `<div class="info-box">Connecté à: ${address}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur connexion EmotionBet: ${error.message}`, 'error');
+            }
+        }
+
+        async function getEmotionBetOwner() {
+            try {
+                if (!emotionBetContract) {
+                    log('❌ Connectez-vous d\'abord au contrat EmotionBet', 'error');
+                    return;
+                }
+
+                const owner = await emotionBetContract.owner();
+                log(`👤 Owner EmotionBet: ${owner}`, 'success');
+                document.getElementById('emotionbet-owner-result').innerHTML = 
+                    `<div class="info-box">Owner: ${owner}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur owner: ${error.message}`, 'error');
+            }
+        }
+
+        async function getEmotionBetClosed() {
+            try {
+                if (!emotionBetContract) {
+                    log('❌ Connectez-vous d\'abord au contrat EmotionBet', 'error');
+                    return;
+                }
+
+                const closed = await emotionBetContract.closed();
+                log(`🔒 Statut EmotionBet: ${closed ? 'Fermé' : 'Ouvert'}`, 'success');
+                document.getElementById('emotionbet-closed-result').innerHTML = 
+                    `<div class="info-box">Statut: ${closed ? 'Fermé' : 'Ouvert'}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur statut: ${error.message}`, 'error');
+            }
+        }
+
+        async function getEmotionBetCount() {
+            try {
+                if (!emotionBetContract) {
+                    log('❌ Connectez-vous d\'abord au contrat EmotionBet', 'error');
+                    return;
+                }
+
+                const count = await emotionBetContract.getBetCount();
+                log(`📊 Nombre de paris: ${count.toString()}`, 'success');
+                document.getElementById('emotionbet-count-result').innerHTML = 
+                    `<div class="info-box">Nombre de paris: ${count.toString()}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur count: ${error.message}`, 'error');
+            }
+        }
+
+        async function getAllEmotionBets() {
+            try {
+                if (!emotionBetContract) {
+                    log('❌ Connectez-vous d\'abord au contrat EmotionBet', 'error');
+                    return;
+                }
+
+                const bets = await emotionBetContract.getAllBets();
+                log(`📋 Récupération de ${bets.length} paris`, 'success');
+                
+                let html = '<div class="info-box">';
+                if (bets.length === 0) {
+                    html += 'Aucun pari trouvé';
+                } else {
+                    bets.forEach((bet, index) => {
+                        html += `
+                            <div style="margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px;">
+                                <strong>Pari #${index}</strong><br>
+                                User: ${bet.user}<br>
+                                Description: ${bet.description}<br>
+                                Montant: ${ethers.utils.formatEther(bet.amount)} CHZ
+                            </div>
+                        `;
+                    });
+                }
+                html += '</div>';
+                
+                document.getElementById('emotionbet-allbets-result').innerHTML = html;
+
+            } catch (error) {
+                log(`❌ Erreur getAllBets: ${error.message}`, 'error');
+            }
+        }
+
+        async function getEmotionBetByIndex() {
+            try {
+                if (!emotionBetContract) {
+                    log('❌ Connectez-vous d\'abord au contrat EmotionBet', 'error');
+                    return;
+                }
+
+                const index = document.getElementById('bet-index').value;
+                if (!index) {
+                    log('❌ Veuillez entrer un index', 'error');
+                    return;
+                }
+
+                const bet = await emotionBetContract.bets(index);
+                log(`📄 Pari #${index} récupéré`, 'success');
+                
+                document.getElementById('emotionbet-single-result').innerHTML = `
+                    <div class="info-box">
+                        <strong>Pari #${index}</strong><br>
+                        User: ${bet.user}<br>
+                        Description: ${bet.description}<br>
+                        Montant: ${ethers.utils.formatEther(bet.amount)} CHZ
+                    </div>
+                `;
+
+            } catch (error) {
+                log(`❌ Erreur getBet: ${error.message}`, 'error');
+            }
+        }
+
+        async function placeEmotionBet() {
+            try {
+                if (!emotionBetContract) {
+                    log('❌ Connectez-vous d\'abord au contrat EmotionBet', 'error');
+                    return;
+                }
+
+                const description = document.getElementById('bet-description').value.trim();
+                const amount = document.getElementById('bet-amount').value;
+
+                if (!description || !amount) {
+                    log('❌ Veuillez remplir la description et le montant', 'error');
+                    return;
+                }
+
+                log(`🎲 Placement du pari: "${description}" pour ${amount} CHZ`, 'info');
+
+                const tx = await emotionBetContract.placeBet(description, {
+                    value: ethers.utils.parseEther(amount)
+                });
+
+                log(`📤 Transaction envoyée: ${tx.hash}`, 'info');
+                
+                const receipt = await tx.wait();
+                log(`✅ Pari placé! Block: ${receipt.blockNumber}`, 'success');
+                
+                document.getElementById('emotionbet-place-result').innerHTML = 
+                    `<div class="info-box">Pari placé avec succès!<br>Hash: ${tx.hash}</div>`;
+
+                // Mettre à jour la balance
+                updateBalance();
+
+            } catch (error) {
+                log(`❌ Erreur placement: ${error.message}`, 'error');
+            }
+        }
+
+        async function endEmotionBets() {
+            try {
+                if (!emotionBetContract) {
+                    log('❌ Connectez-vous d\'abord au contrat EmotionBet', 'error');
+                    return;
+                }
+
+                log(`🔒 Fermeture des paris...`, 'info');
+
+                const tx = await emotionBetContract.endBet();
+                log(`📤 Transaction envoyée: ${tx.hash}`, 'info');
+                
+                const receipt = await tx.wait();
+                log(`✅ Paris fermés! Block: ${receipt.blockNumber}`, 'success');
+                
+                document.getElementById('emotionbet-end-result').innerHTML = 
+                    `<div class="info-box">Paris fermés avec succès!<br>Hash: ${tx.hash}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur fermeture: ${error.message}`, 'error');
+            }
+        }
+
+        // Fonctions AttendanceNFT
+        async function connectAttendanceNFT() {
+            try {
+                const address = document.getElementById('attendancenft-address').value.trim();
+                if (!address) {
+                    log('❌ Veuillez entrer l\'adresse du contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                if (!signer) {
+                    log('❌ Veuillez d\'abord connecter votre wallet', 'error');
+                    return;
+                }
+
+                attendanceNFTContract = new ethers.Contract(address, ATTENDANCE_NFT_ABI, signer);
+                
+                // Test de connexion
+                const owner = await attendanceNFTContract.owner();
+                log(`✅ AttendanceNFT connecté: ${address}`, 'success');
+                log(`👤 Owner: ${owner}`, 'info');
+                
+                document.getElementById('attendancenft-status').innerHTML = 
+                    `<div class="info-box">Connecté à: ${address}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur connexion AttendanceNFT: ${error.message}`, 'error');
+            }
+        }
+
+        async function getAttendanceNFTOwner() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Connectez-vous d\'abord au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                const owner = await attendanceNFTContract.owner();
+                log(`👤 Owner AttendanceNFT: ${owner}`, 'success');
+                document.getElementById('attendancenft-owner-result').innerHTML = 
+                    `<div class="info-box">Owner: ${owner}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur owner: ${error.message}`, 'error');
+            }
+        }
+
+        async function getNextTokenId() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Connectez-vous d\'abord au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                const nextId = await attendanceNFTContract.nextTokenId();
+                log(`🆔 Next Token ID: ${nextId.toString()}`, 'success');
+                document.getElementById('attendancenft-nexttokenid-result').innerHTML = 
+                    `<div class="info-box">Next Token ID: ${nextId.toString()}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur nextTokenId: ${error.message}`, 'error');
+            }
+        }
+
+        async function getTotalSupply() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Connectez-vous d\'abord au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                const total = await attendanceNFTContract.getTotalSupply();
+                log(`📊 Total Supply: ${total.toString()}`, 'success');
+                document.getElementById('attendancenft-totalsupply-result').innerHTML = 
+                    `<div class="info-box">Total Supply: ${total.toString()}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur totalSupply: ${error.message}`, 'error');
+            }
+        }
+
+        async function getUserNFTs() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Connectez-vous d\'abord au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                let userAddr = document.getElementById('user-address').value.trim();
+                if (!userAddr) {
+                    userAddr = walletAddress;
+                    log(`ℹ️ Utilisation de votre adresse: ${userAddr}`, 'info');
+                }
+
+                const nfts = await attendanceNFTContract.getUserNFTs(userAddr);
+                log(`🎨 ${nfts.length} NFTs trouvés pour ${userAddr}`, 'success');
+                
+                let html = '<div class="info-box">';
+                if (nfts.length === 0) {
+                    html += 'Aucun NFT trouvé';
+                } else {
+                    html += `NFTs possédés: [${nfts.map(id => id.toString()).join(', ')}]`;
+                }
+                html += '</div>';
+                
+                document.getElementById('attendancenft-usernfts-result').innerHTML = html;
+
+            } catch (error) {
+                log(`❌ Erreur getUserNFTs: ${error.message}`, 'error');
+            }
+        }
+
+        async function getTokenOwner() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Connectez-vous d\'abord au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                const tokenId = document.getElementById('token-owner-id').value;
+                if (!tokenId) {
+                    log('❌ Veuillez entrer un Token ID', 'error');
+                    return;
+                }
+
+                const owner = await attendanceNFTContract.tokenOwner(tokenId);
+                log(`👤 Owner du Token #${tokenId}: ${owner}`, 'success');
+                document.getElementById('attendancenft-tokenowner-result').innerHTML = 
+                    `<div class="info-box">Owner du Token #${tokenId}: ${owner}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur tokenOwner: ${error.message}`, 'error');
+            }
+        }
+
+        async function getNFTMetadata() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Connectez-vous d\'abord au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                const tokenId = document.getElementById('metadata-token-id').value;
+                if (!tokenId) {
+                    log('❌ Veuillez entrer un Token ID', 'error');
+                    return;
+                }
+
+                const metadata = await attendanceNFTContract.getNFTMetadata(tokenId);
+                log(`📄 Métadonnées du Token #${tokenId} récupérées`, 'success');
+                
+                document.getElementById('attendancenft-metadata-result').innerHTML = `
+                    <div class="info-box">
+                        <strong>NFT #${tokenId}</strong><br>
+                        Événement: ${metadata.eventName}<br>
+                        Date: ${metadata.eventDate}<br>
+                        Type: ${metadata.eventType}<br>
+                        Rareté: ${metadata.rarity}<br>
+                        Participants: ${metadata.attendanceCount}<br>
+                        Timestamp: ${new Date(metadata.timestamp * 1000).toLocaleString()}<br>
+                        Image: <a href="${metadata.imageUrl}" target="_blank">Voir</a>
+                    </div>
+                `;
+
+            } catch (error) {
+                log(`❌ Erreur métadonnées: ${error.message}`, 'error');
+            }
+        }
+
+        // Fonctions de mint
+        async function getMintParams() {
+            return {
+                to: document.getElementById('mint-to-address').value.trim() || walletAddress,
+                eventName: document.getElementById('mint-event-name').value.trim() || "Test Event",
+                eventDate: document.getElementById('mint-event-date').value.trim() || "2024-01-15",
+                eventType: document.getElementById('mint-event-type').value.trim() || "match",
+                attendanceCount: document.getElementById('mint-attendance-count').value || "1000"
+            };
+        }
+
+        async function mintCommonNFT() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Connectez-vous d\'abord au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                const params = await getMintParams();
+                log(`🎨 Mint Common NFT pour ${params.to}`, 'info');
+
+                const tx = await attendanceNFTContract.mintCommonNFT(
+                    params.to,
+                    params.eventName,
+                    params.eventDate,
+                    params.eventType,
+                    params.attendanceCount
+                );
+
+                log(`📤 Transaction envoyée: ${tx.hash}`, 'info');
+                
+                const receipt = await tx.wait();
+                log(`✅ NFT Common minté! Block: ${receipt.blockNumber}`, 'success');
+                
+                document.getElementById('mint-common-result').innerHTML = 
+                    `<div class="info-box">NFT Common minté!<br>Hash: ${tx.hash}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur mint Common: ${error.message}`, 'error');
+            }
+        }
+
+        async function mintRareNFT() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Connectez-vous d\'abord au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                const params = await getMintParams();
+                log(`🎨 Mint Rare NFT pour ${params.to}`, 'info');
+
+                const tx = await attendanceNFTContract.mintRareNFT(
+                    params.to,
+                    params.eventName,
+                    params.eventDate,
+                    params.eventType,
+                    params.attendanceCount
+                );
+
+                log(`📤 Transaction envoyée: ${tx.hash}`, 'info');
+                
+                const receipt = await tx.wait();
+                log(`✅ NFT Rare minté! Block: ${receipt.blockNumber}`, 'success');
+                
+                document.getElementById('mint-rare-result').innerHTML = 
+                    `<div class="info-box">NFT Rare minté!<br>Hash: ${tx.hash}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur mint Rare: ${error.message}`, 'error');
+            }
+        }
+
+        async function mintEpicNFT() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Connectez-vous d\'abord au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                const params = await getMintParams();
+                log(`🎨 Mint Epic NFT pour ${params.to}`, 'info');
+
+                const tx = await attendanceNFTContract.mintEpicNFT(
+                    params.to,
+                    params.eventName,
+                    params.eventDate,
+                    params.eventType,
+                    params.attendanceCount
+                );
+
+                log(`📤 Transaction envoyée: ${tx.hash}`, 'info');
+                
+                const receipt = await tx.wait();
+                log(`✅ NFT Epic minté! Block: ${receipt.blockNumber}`, 'success');
+                
+                document.getElementById('mint-epic-result').innerHTML = 
+                    `<div class="info-box">NFT Epic minté!<br>Hash: ${tx.hash}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur mint Epic: ${error.message}`, 'error');
+            }
+        }
+
+        async function mintLegendaryNFT() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Connectez-vous d\'abord au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                const params = await getMintParams();
+                log(`🎨 Mint Legendary NFT pour ${params.to}`, 'info');
+
+                const tx = await attendanceNFTContract.mintLegendaryNFT(
+                    params.to,
+                    params.eventName,
+                    params.eventDate,
+                    params.eventType,
+                    params.attendanceCount
+                );
+
+                log(`📤 Transaction envoyée: ${tx.hash}`, 'info');
+                
+                const receipt = await tx.wait();
+                log(`✅ NFT Legendary minté! Block: ${receipt.blockNumber}`, 'success');
+                
+                document.getElementById('mint-legendary-result').innerHTML = 
+                    `<div class="info-box">NFT Legendary minté!<br>Hash: ${tx.hash}</div>`;
+
+            } catch (error) {
+                log(`❌ Erreur mint Legendary: ${error.message}`, 'error');
+            }
+        }
+
+        // Tests automatisés
+        async function testEmotionBetComplete() {
+            log('🧪 === Test EmotionBet Complet ===', 'info');
+            
+            if (!emotionBetContract) {
+                log('❌ Contrat EmotionBet non connecté', 'error');
+                return;
+            }
+
+            try {
+                // Test lecture
+                await getEmotionBetOwner();
+                await getEmotionBetClosed();
+                await getEmotionBetCount();
+                await getAllEmotionBets();
+                
+                // Test écriture (si pas fermé)
+                const closed = await emotionBetContract.closed();
+                if (!closed) {
+                    document.getElementById('bet-description').value = "Test automatique - PSG va gagner!";
+                    document.getElementById('bet-amount').value = "0.1";
+                    await placeEmotionBet();
+                }
+                
+                log('✅ Test EmotionBet terminé!', 'success');
+                
+            } catch (error) {
+                log(`❌ Erreur test EmotionBet: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAttendanceNFTComplete() {
+            log('🧪 === Test AttendanceNFT Complet ===', 'info');
+            
+            if (!attendanceNFTContract) {
+                log('❌ Contrat AttendanceNFT non connecté', 'error');
+                return;
+            }
+
+            try {
+                // Test lecture
+                await getAttendanceNFTOwner();
+                await getNextTokenId();
+                await getTotalSupply();
+                await getUserNFTs();
+                
+                // Préparer les données de test
+                document.getElementById('mint-to-address').value = walletAddress;
+                document.getElementById('mint-event-name').value = "Test Auto PSG vs Barcelona";
+                document.getElementById('mint-event-date').value = "2024-01-15";
+                document.getElementById('mint-event-type').value = "test-match";
+                document.getElementById('mint-attendance-count').value = "5000";
+                
+                // Test mint (si owner)
+                const owner = await attendanceNFTContract.owner();
+                if (owner.toLowerCase() === walletAddress.toLowerCase()) {
+                    log('👑 Vous êtes owner, test des mints...', 'info');
+                    await mintCommonNFT();
+                } else {
+                    log('ℹ️ Vous n\'êtes pas owner, skip des mints', 'warning');
+                }
+                
+                log('✅ Test AttendanceNFT terminé!', 'success');
+                
+            } catch (error) {
+                log(`❌ Erreur test AttendanceNFT: ${error.message}`, 'error');
+            }
+        }
+
+        async function testIntegrationComplete() {
+            log('🧪 === Test Intégration Complet ===', 'info');
+            
+            await testEmotionBetComplete();
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Pause
+            await testAttendanceNFTComplete();
+            
+            log('✅ Test d\'intégration terminé!', 'success');
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            log('🧹 Logs effacés', 'info');
+        }
+
+        // Auto-remplissage des adresses si wallet connecté
+        async function autoFillUserAddress() {
+            if (walletAddress) {
+                document.getElementById('user-address').value = walletAddress;
+                document.getElementById('mint-to-address').value = walletAddress;
+            }
+        }
+
+        // Initialisation
+        window.addEventListener('load', function() {
+            log('🚀 Testeur de contrats FanVerse chargé!', 'success');
+            log('📋 Connectez votre wallet et vos contrats pour commencer', 'info');
+        });
+
+        // Écouter les changements de wallet
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', function (accounts) {
+                if (accounts.length === 0) {
+                    log('👋 Wallet déconnecté', 'warning');
+                    location.reload();
+                } else {
+                    log(`🔄 Compte changé: ${accounts[0]}`, 'info');
+                    location.reload();
+                }
+            });
+
+            window.ethereum.on('chainChanged', function (chainId) {
+                log(`🌐 Réseau changé: ${chainId}`, 'info');
+                location.reload();
+            });
+        }
+    </script>
+</body>
+</html>

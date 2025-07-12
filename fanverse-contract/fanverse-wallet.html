@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FanVerse - Connect Wallet (Testnet)</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 50%, #0a0a0a 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(26, 26, 26, 0.8);
+            border-radius: 20px;
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.5rem;
+        }
+        
+        .wallet-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(42, 26, 42, 0.5);
+            border-radius: 15px;
+            border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+        
+        .button {
+            background: linear-gradient(45deg, #9333ea, #ec4899);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(147, 51, 234, 0.3);
+        }
+        
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .info-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+        
+        .error-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+        
+        .contract-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .contract-card {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 1.5rem;
+            border-radius: 15px;
+        }
+        
+        .address-display {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.5rem;
+            border-radius: 5px;
+            word-break: break-all;
+            margin: 0.5rem 0;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status.connected {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .status.disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #9333ea;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .contract-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .testnet-banner {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .network-status {
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            padding: 8px;
+            border-radius: 8px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Bannière Testnet -->
+        <div class="testnet-banner">
+            🧪 Mode Testnet - Chiliz Spicy Chain (88882)
+        </div>
+        
+        <h1>⚽ FanVerse Wallet Connection</h1>
+        
+        <!-- Section Wallet -->
+        <div class="wallet-section">
+            <h2>🔗 Connexion Wallet Testnet</h2>
+            <p>Connexion automatique au réseau Chiliz Spicy Testnet (Chain ID: 88882)</p>
+            
+            <div id="wallet-status">
+                <span class="status disconnected">Non connecté</span>
+            </div>
+            
+            <div class="network-status">
+                <strong>Réseau cible:</strong> Chiliz Spicy Testnet (88882)<br>
+                <strong>RPC:</strong> https://spicy-rpc.chiliz.com/<br>
+                <strong>Explorer:</strong> https://testnet.chiliscan.com/
+            </div>
+            
+            <div id="wallet-buttons">
+                <button class="button" onclick="connectToTestnet()">🧪 Connecter au Testnet</button>
+                <button class="button" onclick="forceTestnetConnection()">🔄 Forcer Testnet 88882</button>
+                <button class="button" onclick="checkNetwork()">🔍 Vérifier réseau</button>
+            </div>
+            
+            <div id="wallet-info" style="display: none;">
+                <div class="info-box">
+                    <strong>Adresse:</strong>
+                    <div class="address-display" id="wallet-address"></div>
+                    <strong>Réseau:</strong>
+                    <div class="address-display" id="network-info"></div>
+                    <button class="button" onclick="copyAddress()">📋 Copier</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section Contrats -->
+        <div class="contract-section">
+            <!-- EmotionBet -->
+            <div class="contract-card">
+                <h3>🎲 EmotionBet Contract</h3>
+                <p>Contrat pour les paris émotionnels (Testnet)</p>
+                
+                <div>
+                    <label>Adresse du contrat:</label>
+                    <input type="text" id="emotionbet-address" placeholder="0x..." 
+                           style="width: 100%; padding: 8px; margin: 8px 0; border-radius: 5px; border: 1px solid #555; background: #2a2a2a; color: white;">
+                </div>
+                
+                <button class="button" onclick="connectEmotionBet()">Se connecter au contrat</button>
+                <button class="button" onclick="getEmotionBetInfo()">Infos contrat</button>
+                
+                <div id="emotionbet-info"></div>
+                
+                <div style="margin-top: 1rem;">
+                    <input type="text" id="bet-description" placeholder="Description du pari..." 
+                           style="width: 100%; padding: 8px; margin: 4px 0; border-radius: 5px; border: 1px solid #555; background: #2a2a2a; color: white;">
+                    <input type="number" id="bet-amount" placeholder="Montant en CHZ" step="0.01"
+                           style="width: 100%; padding: 8px; margin: 4px 0; border-radius: 5px; border: 1px solid #555; background: #2a2a2a; color: white;">
+                    <button class="button" onclick="placeBet()">Placer un pari</button>
+                </div>
+            </div>
+            
+            <!-- AttendanceNFT -->
+            <div class="contract-card">
+                <h3>🎨 AttendanceNFT Contract</h3>
+                <p>Contrat pour les NFT d'attendance (Testnet)</p>
+                
+                <div>
+                    <label>Adresse du contrat:</label>
+                    <input type="text" id="attendancenft-address" placeholder="0x..." 
+                           style="width: 100%; padding: 8px; margin: 8px 0; border-radius: 5px; border: 1px solid #555; background: #2a2a2a; color: white;">
+                </div>
+                
+                <button class="button" onclick="connectAttendanceNFT()">Se connecter au contrat</button>
+                <button class="button" onclick="getAttendanceNFTInfo()">Infos contrat</button>
+                <button class="button" onclick="getUserNFTs()">Mes NFTs</button>
+                
+                <div id="attendancenft-info"></div>
+            </div>
+        </div>
+        
+        <!-- Section Logs -->
+        <div class="wallet-section">
+            <h3>📋 Logs d'activité</h3>
+            <div id="logs" style="background: #000; padding: 1rem; border-radius: 10px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.9rem;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration CORRECTE avec le vrai Chain ID
+        const TESTNET_CONFIG = {
+            chainId: '0x15b32', // 88882 en hex (CORRECT)
+            chainName: 'Chiliz Spicy Testnet',
+            nativeCurrency: {
+                name: 'Chiliz',
+                symbol: 'CHZ',
+                decimals: 18
+            },
+            rpcUrls: ['https://spicy-rpc.chiliz.com/'],
+            blockExplorerUrls: ['https://testnet.chiliscan.com/']
+        };
+
+        // Variables globales
+        let provider = null;
+        let signer = null;
+        let walletAddress = null;
+        let emotionBetContract = null;
+        let attendanceNFTContract = null;
+
+        // ABI des contrats
+        const EMOTION_BET_ABI = [
+            "function owner() view returns (address)",
+            "function getBetCount() view returns (uint256)",
+            "function closed() view returns (bool)",
+            "function placeBet(string description) payable",
+            "function endBet()",
+            "function getAllBets() view returns (tuple(address user, string description, uint96 amount)[])",
+            "event BetPlaced(address indexed user, string description, uint96 amount)"
+        ];
+
+        const ATTENDANCE_NFT_ABI = [
+            "function owner() view returns (address)",
+            "function nextTokenId() view returns (uint256)",
+            "function getTotalSupply() view returns (uint256)",
+            "function getUserNFTs(address user) view returns (uint256[])",
+            "function getNFTMetadata(uint256 tokenId) view returns (tuple(string eventName, string eventDate, string eventType, string rarity, string imageUrl, uint32 attendanceCount, uint64 timestamp))",
+            "function mintCommonNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount) returns (uint256)",
+            "function mintRareNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount) returns (uint256)",
+            "function mintEpicNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount) returns (uint256)",
+            "function mintLegendaryNFT(address to, string eventName, string eventDate, string eventType, uint32 attendanceCount) returns (uint256)",
+            "event NFTMinted(address indexed to, uint256 indexed tokenId, string rarity)"
+        ];
+
+        // Fonction de logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#64b5f6',
+                success: '#4caf50',
+                error: '#f44336',
+                warning: '#ff9800'
+            };
+            
+            const logsDiv = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            logEntry.style.color = colors[type];
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        // Fonction principale: Connexion TESTNET ONLY
+        async function connectToTestnet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    log('❌ MetaMask non détecté!', 'error');
+                    alert('Veuillez installer MetaMask pour continuer!');
+                    return;
+                }
+
+                log('🧪 Connexion au Testnet Chiliz (88882)...', 'info');
+
+                // Étape 1: Vérifier le réseau actuel
+                const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+                log(`Réseau actuel: ${currentChainId} (${parseInt(currentChainId, 16)})`, 'info');
+
+                // Étape 2: Changer vers le testnet si nécessaire
+                if (currentChainId !== TESTNET_CONFIG.chainId) {
+                    log('🔄 Ajout/changement vers le testnet...', 'warning');
+                    await forceTestnetConnection();
+                }
+
+                // Étape 3: Connecter le wallet
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+
+                walletAddress = accounts[0];
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+
+                // Étape 4: Vérification finale
+                const network = await provider.getNetwork();
+                if (network.chainId !== 88882) {
+                    throw new Error(`Erreur: Chain ID ${network.chainId} au lieu de 88882`);
+                }
+
+                log('✅ Connexion testnet réussie!', 'success');
+                log(`👤 Adresse: ${walletAddress}`, 'success');
+                log(`🌐 Réseau: Chiliz Testnet (${network.chainId})`, 'success');
+                
+                updateWalletDisplay();
+
+            } catch (error) {
+                log(`❌ Erreur connexion: ${error.message}`, 'error');
+            }
+        }
+
+        // Fonction pour forcer la connexion testnet
+        async function forceTestnetConnection() {
+            try {
+                log('🎯 Forçage de la connexion au testnet 88882...', 'info');
+                
+                // Essayer de changer vers le testnet
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: TESTNET_CONFIG.chainId }]
+                    });
+                    log('✅ Changement réussi vers 88882!', 'success');
+                } catch (switchError) {
+                    // Si le réseau n'existe pas, l'ajouter
+                    if (switchError.code === 4902) {
+                        log('📝 Ajout du réseau testnet...', 'info');
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [TESTNET_CONFIG]
+                        });
+                        log('✅ Réseau testnet ajouté et activé!', 'success');
+                    } else {
+                        throw switchError;
+                    }
+                }
+
+                // Petite attente pour que le changement prenne effet
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+            } catch (error) {
+                log(`❌ Erreur forçage testnet: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        // Vérifier le réseau (testnet uniquement) - CORRIGÉ
+        async function checkNetwork() {
+            try {
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                const chainIdDecimal = parseInt(chainId, 16);
+                
+                log(`🔍 Vérification réseau...`, 'info');
+                log(`Chain ID détecté: ${chainId} (${chainIdDecimal})`, 'info');
+                
+                if (chainIdDecimal === 88882) { // ✅ CORRECT
+                    log('✅ Parfait! Vous êtes sur le Testnet Chiliz (88882)', 'success');
+                    return true;
+                } else {
+                    log('❌ Mauvais réseau! Vous devez être sur le testnet 88882', 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Erreur vérification réseau: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        // Mettre à jour l'affichage - CORRIGÉ
+        function updateWalletDisplay() {
+            const statusElement = document.getElementById('wallet-status');
+            const walletInfo = document.getElementById('wallet-info');
+            const addressElement = document.getElementById('wallet-address');
+            const networkElement = document.getElementById('network-info');
+
+            if (walletAddress) {
+                statusElement.innerHTML = '<span class="status connected">Connecté (Testnet)</span>';
+                addressElement.textContent = walletAddress;
+                networkElement.textContent = 'Chiliz Spicy Testnet (88882)'; // Changé
+                walletInfo.style.display = 'block';
+            } else {
+                statusElement.innerHTML = '<span class="status disconnected">Non connecté</span>';
+                walletInfo.style.display = 'none';
+            }
+        }
+
+        // Copier l'adresse
+        function copyAddress() {
+            if (walletAddress) {
+                navigator.clipboard.writeText(walletAddress);
+                log('📋 Adresse copiée dans le presse-papier!', 'success');
+            }
+        }
+
+        // Connexion au contrat EmotionBet (avec vérification testnet)
+        async function connectEmotionBet() {
+            try {
+                // Vérifier qu'on est sur le testnet
+                const isTestnet = await checkNetwork();
+                if (!isTestnet) {
+                    log('❌ Vous devez être sur le testnet pour utiliser les contrats!', 'error');
+                    return;
+                }
+
+                const address = document.getElementById('emotionbet-address').value.trim();
+                if (!address) {
+                    log('❌ Veuillez entrer l\'adresse du contrat EmotionBet', 'error');
+                    return;
+                }
+
+                if (!signer) {
+                    log('❌ Veuillez d\'abord connecter votre wallet', 'error');
+                    return;
+                }
+
+                emotionBetContract = new ethers.Contract(address, EMOTION_BET_ABI, signer);
+                log(`✅ Connexion au contrat EmotionBet: ${address}`, 'success');
+                
+                // Test de connexion
+                try {
+                    const owner = await emotionBetContract.owner();
+                    log(`👤 Owner du contrat: ${owner}`, 'info');
+                } catch (error) {
+                    log(`❌ Erreur test contrat: ${error.message}`, 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Erreur connexion EmotionBet: ${error.message}`, 'error');
+            }
+        }
+
+        // Obtenir les infos du contrat EmotionBet
+        async function getEmotionBetInfo() {
+            try {
+                if (!emotionBetContract) {
+                    log('❌ Veuillez d\'abord vous connecter au contrat EmotionBet', 'error');
+                    return;
+                }
+
+                log('🔄 Récupération des informations du contrat...', 'info');
+                
+                const owner = await emotionBetContract.owner();
+                const betCount = await emotionBetContract.getBetCount();
+                const closed = await emotionBetContract.closed();
+
+                const infoDiv = document.getElementById('emotionbet-info');
+                infoDiv.innerHTML = `
+                    <div class="info-box">
+                        <strong>Informations EmotionBet (Testnet):</strong><br>
+                        Owner: ${owner}<br>
+                        Nombre de paris: ${betCount.toString()}<br>
+                        Statut: ${closed ? 'Fermé' : 'Ouvert'}
+                    </div>
+                `;
+
+                log(`✅ Infos récupérées - Paris: ${betCount}, Statut: ${closed ? 'Fermé' : 'Ouvert'}`, 'success');
+
+            } catch (error) {
+                log(`❌ Erreur récupération infos: ${error.message}`, 'error');
+            }
+        }
+
+        // Placer un pari
+        async function placeBet() {
+            try {
+                // Vérifier le réseau
+                const isTestnet = await checkNetwork();
+                if (!isTestnet) {
+                    log('❌ Vous devez être sur le testnet pour placer des paris!', 'error');
+                    return;
+                }
+
+                if (!emotionBetContract) {
+                    log('❌ Veuillez d\'abord vous connecter au contrat EmotionBet', 'error');
+                    return;
+                }
+
+                const description = document.getElementById('bet-description').value.trim();
+                const amount = document.getElementById('bet-amount').value;
+
+                if (!description || !amount) {
+                    log('❌ Veuillez remplir la description et le montant', 'error');
+                    return;
+                }
+
+                log(`🎲 Placement du pari: "${description}" pour ${amount} CHZ`, 'info');
+
+                const tx = await emotionBetContract.placeBet(description, {
+                    value: ethers.utils.parseEther(amount)
+                });
+
+                log(`📤 Transaction envoyée: ${tx.hash}`, 'info');
+                log('⏳ Attente de confirmation...', 'info');
+
+                const receipt = await tx.wait();
+                log(`✅ Pari placé avec succès! Block: ${receipt.blockNumber}`, 'success');
+
+                // Rafraîchir les infos
+                getEmotionBetInfo();
+
+            } catch (error) {
+                log(`❌ Erreur placement pari: ${error.message}`, 'error');
+            }
+        }
+
+        // Connexion au contrat AttendanceNFT
+        async function connectAttendanceNFT() {
+            try {
+                const isTestnet = await checkNetwork();
+                if (!isTestnet) {
+                    log('❌ Vous devez être sur le testnet pour utiliser les contrats!', 'error');
+                    return;
+                }
+
+                const address = document.getElementById('attendancenft-address').value.trim();
+                if (!address) {
+                    log('❌ Veuillez entrer l\'adresse du contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                if (!signer) {
+                    log('❌ Veuillez d\'abord connecter votre wallet', 'error');
+                    return;
+                }
+
+                attendanceNFTContract = new ethers.Contract(address, ATTENDANCE_NFT_ABI, signer);
+                log(`✅ Connexion au contrat AttendanceNFT: ${address}`, 'success');
+                
+                try {
+                    const owner = await attendanceNFTContract.owner();
+                    log(`👤 Owner du contrat: ${owner}`, 'info');
+                } catch (error) {
+                    log(`❌ Erreur test contrat: ${error.message}`, 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Erreur connexion AttendanceNFT: ${error.message}`, 'error');
+            }
+        }
+
+        // Obtenir les infos du contrat AttendanceNFT
+        async function getAttendanceNFTInfo() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Veuillez d\'abord vous connecter au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                log('🔄 Récupération des informations du contrat NFT...', 'info');
+                
+                const owner = await attendanceNFTContract.owner();
+                const nextTokenId = await attendanceNFTContract.nextTokenId();
+                const totalSupply = await attendanceNFTContract.getTotalSupply();
+
+                const infoDiv = document.getElementById('attendancenft-info');
+                infoDiv.innerHTML = `
+                    <div class="info-box">
+                        <strong>Informations AttendanceNFT (Testnet):</strong><br>
+                        Owner: ${owner}<br>
+                        Prochain Token ID: ${nextTokenId.toString()}<br>
+                        Total Supply: ${totalSupply.toString()}
+                    </div>
+                `;
+
+                log(`✅ Infos NFT récupérées - Total: ${totalSupply}, Prochain ID: ${nextTokenId}`, 'success');
+
+            } catch (error) {
+                log(`❌ Erreur récupération infos NFT: ${error.message}`, 'error');
+            }
+        }
+
+        // Obtenir les NFTs de l'utilisateur
+        async function getUserNFTs() {
+            try {
+                if (!attendanceNFTContract) {
+                    log('❌ Veuillez d\'abord vous connecter au contrat AttendanceNFT', 'error');
+                    return;
+                }
+
+                if (!walletAddress) {
+                    log('❌ Veuillez d\'abord connecter votre wallet', 'error');
+                    return;
+                }
+
+                log('🔄 Récupération de vos NFTs...', 'info');
+                
+                const userNFTs = await attendanceNFTContract.getUserNFTs(walletAddress);
+                
+                if (userNFTs.length === 0) {
+                    log('ℹ️ Vous ne possédez aucun NFT', 'info');
+                    return;
+                }
+
+                log(`🎨 Vous possédez ${userNFTs.length} NFT(s)`, 'success');
+                
+                // Récupérer les métadonnées de chaque NFT
+                for (let i = 0; i < userNFTs.length; i++) {
+                    try {
+                        const tokenId = userNFTs[i];
+                        const metadata = await attendanceNFTContract.getNFTMetadata(tokenId);
+                        log(`🏆 NFT #${tokenId}: ${metadata.eventName} (${metadata.rarity})`, 'info');
+                    } catch (error) {
+                        log(`❌ Erreur métadonnées NFT #${userNFTs[i]}: ${error.message}`, 'error');
+                    }
+                }
+
+            } catch (error) {
+                log(`❌ Erreur récupération NFTs: ${error.message}`, 'error');
+            }
+        }
+
+        // Écouter les changements de réseau - CORRIGÉ
+        if (window.ethereum) {
+            window.ethereum.on('chainChanged', function (chainId) {
+                const chainIdDecimal = parseInt(chainId, 16);
+                log(`🌐 Réseau changé: ${chainId} (${chainIdDecimal})`, 'info');
+                
+                if (chainIdDecimal !== 88882) { // ✅ CORRECT
+                    log('⚠️ Attention: Vous n\'êtes plus sur le testnet!', 'warning');
+                    log('🔄 Rechargement pour rétablir la connexion...', 'info');
+                    setTimeout(() => window.location.reload(), 2000);
+                }
+            });
+        }
+
+        // Initialisation - CORRIGÉ
+        window.addEventListener('load', async function() {
+            log('🚀 FanVerse Testnet chargé!', 'success');
+            log('🧪 Mode Testnet Uniquement - Chain ID 88882', 'info');
+            log('🔗 Cliquez sur "Connecter au Testnet" pour commencer', 'info');
+            
+            // Vérification automatique si MetaMask est déjà connecté
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    if (accounts.length > 0) {
+                        log('👀 Wallet déjà connecté détecté, vérification du réseau...', 'info');
+                        await checkNetwork();
+                    }
+                } catch (error) {
+                    log('⚠️ Erreur vérification wallet existant', 'warning');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
