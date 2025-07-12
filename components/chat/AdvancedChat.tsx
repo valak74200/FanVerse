@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Send, Mic, MicOff, Volume2, Smile, ImageIcon, Crown, MessageCircle, Settings } from "lucide-react"
 
 interface ChatMessage {
-  id: number
+  id: number | string
   user: string
   message: string
   timestamp: string
@@ -29,7 +29,7 @@ interface AdvancedChatProps {
 export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedChatProps) {
   const [messages, setMessages] = useState([
     {
-      id: 1,
+      id: "1",
       user: "Mike_PSG",
       message: "MBAPPÉ IS ON FIRE! 🔥🔥🔥",
       timestamp: "67:15",
@@ -43,7 +43,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
       fanTokens: 50,
     },
     {
-      id: 2,
+      id: "2",
       user: "Sarah_Barca",
       message: "That was close! Great save by Ter Stegen 🧤",
       timestamp: "67:18",
@@ -52,7 +52,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
       reactions: [{ emoji: "👏", count: 5, users: ["Alex", "Mike"] }],
     },
     {
-      id: 3,
+      id: "3",
       user: "System",
       message: "Alex a rejoint le chat vocal",
       timestamp: "67:19",
@@ -60,7 +60,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
       type: "system",
     },
     {
-      id: 4,
+      id: "4",
       user: "Alex_Ultra",
       message: "🎵 Audio message (0:15)",
       timestamp: "67:20",
@@ -117,7 +117,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
 
         setMessages((prev) =>
           [
-            ...prev,
+            ...prev.slice(-49),
             {
               id: Date.now(),
               user: randomUser,
@@ -128,7 +128,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
               isVip: Math.random() > 0.7,
               fanTokens: Math.floor(Math.random() * 20) + 5,
             },
-          ].slice(-50),
+          ],
         ) // Garder seulement les 50 derniers messages
       },
       4000 + Math.random() * 6000,
@@ -148,7 +148,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
 
       setMessages((prev) => [
         ...prev,
-        {
+        {  
           id: Date.now(),
           user: "Alex",
           message: newMessage,
@@ -164,13 +164,13 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
   }
 
   const handleVoiceRecord = () => {
-    setIsRecording(!isRecording)
+    setIsRecording(!isRecording);
     if (!isRecording) {
       // Simuler l'enregistrement
       setTimeout(() => {
-        setIsRecording(false)
-        const currentTime = new Date()
-        const timestamp = `${currentTime.getMinutes()}:${currentTime.getSeconds().toString().padStart(2, "0")}`
+        setIsRecording(false);
+        const currentTime = new Date();
+        const timestamp = `${currentTime.getMinutes()}:${currentTime.getSeconds().toString().padStart(2, "0")}`;
 
         setMessages((prev) => [
           ...prev,
@@ -185,7 +185,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
             fanTokens: fanTokenRewards.voice,
           },
         ])
-      }, 2000)
+      }, 2000);
     }
   }
 
@@ -193,7 +193,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
     setMessages((prev) =>
       prev.map((msg) => {
         if (msg.id === messageId) {
-          const existingReaction = msg.reactions?.find((r) => r.emoji === emoji)
+          const existingReaction = msg.reactions?.find((r) => r.emoji === emoji);
           if (existingReaction) {
             return {
               ...msg,
@@ -201,7 +201,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                 r.emoji === emoji ? { ...r, count: r.count + 1, users: [...r.users, "Alex"] } : r,
               ),
             }
-          } else {
+          } else {  
             return {
               ...msg,
               reactions: [...(msg.reactions || []), { emoji, count: 1, users: ["Alex"] }],
@@ -220,46 +220,12 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header du chat */}
-      <Card className="bg-gradient-to-r from-[#1a1a1a] to-[#2a1a2a] border-purple-500/30 p-4 mb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <MessageCircle className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-white">{chatType === "general" ? "Chat Général" : "Chat Groupe"}</h3>
-              <p className="text-sm text-gray-400">
-                {chatType === "general" ? "2,847 fans en ligne" : "47 membres actifs"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleVoiceChat}
-              className={`border-green-500/30 ${
-                isVoiceChatActive ? "bg-green-500/20 text-green-400" : "text-gray-400"
-              }`}
-            >
-              <Volume2 className="w-4 h-4 mr-1" />
-              Vocal
-            </Button>
-            <Button variant="outline" size="sm" className="border-gray-700 text-gray-400 bg-transparent">
-              <Settings className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </Card>
-
       {/* Participants du chat vocal */}
       {isVoiceChatActive && (
-        <Card className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30 p-3 mb-4">
+        <Card className="bg-gradient-to-r from-[#00D4AA]/20 to-[#00D4AA]/10 border-[#00D4AA]/30 p-3 mb-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-green-400 flex items-center">
-              <Volume2 className="w-4 h-4 mr-2" />
+            <h4 className="text-sm font-medium text-[#00D4AA] flex items-center">
+              <Volume2 className="w-4 h-4 mr-2 text-[#00D4AA]" />
               Chat Vocal ({voiceParticipants.length})
             </h4>
             <div className="flex items-center space-x-2">
@@ -267,7 +233,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                 variant="outline"
                 size="sm"
                 onClick={() => setIsMuted(!isMuted)}
-                className={`border-green-500/30 ${isMuted ? "bg-red-500/20 text-red-400" : "text-green-400"}`}
+                className={`border-[#00D4AA]/30 ${isMuted ? "bg-red-500/20 text-red-400" : "text-[#00D4AA]"}`}
               >
                 {isMuted ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
               </Button>
@@ -279,7 +245,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
               <div
                 key={index}
                 className={`flex items-center space-x-2 px-3 py-1 rounded-full border ${
-                  participant.isSpeaking ? "border-green-400 bg-green-500/20" : "border-gray-600 bg-gray-800/50"
+                  participant.isSpeaking ? "border-[#00D4AA] bg-[#00D4AA]/20" : "border-gray-600 bg-gray-800/50"
                 }`}
               >
                 <Avatar className="w-6 h-6">
@@ -287,7 +253,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                 </Avatar>
                 <span className="text-sm text-white">{participant.name}</span>
                 {participant.isMuted && <MicOff className="w-3 h-3 text-red-400" />}
-                {participant.isSpeaking && <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />}
+                {participant.isSpeaking && <div className="w-2 h-2 bg-[#00D4AA] rounded-full animate-pulse" />}
               </div>
             ))}
           </div>
@@ -295,7 +261,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
       )}
 
       {/* Messages */}
-      <Card className="flex-1 bg-[#1a1a1a] border-gray-800 p-4 overflow-hidden">
+      <Card className="flex-1 bg-[#1A1A2E] border-[#FF6B35]/20 p-4 overflow-hidden">
         <div className="h-full overflow-y-auto space-y-3">
           {messages.map((msg) => (
             <div key={msg.id} className="group">
@@ -314,25 +280,25 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                     <div className="flex items-center space-x-2 mb-1">
                       <span className={`font-medium text-sm ${msg.isVip ? "text-purple-400" : "text-blue-400"}`}>
                         {msg.user}
-                      </span>
+                      </span>  
                       {msg.isVip && <Crown className="w-3 h-3 text-yellow-400" />}
                       <span className="text-xs text-gray-500">{msg.timestamp}</span>
                       {msg.fanTokens && (
-                        <Badge className="bg-purple-500/20 text-purple-400 text-xs">+{msg.fanTokens} CHZ</Badge>
+                        <Badge className="bg-[#FF6B35]/20 text-[#FF6B35] text-xs">+{msg.fanTokens} CHZ</Badge>
                       )}
                     </div>
 
                     <div
                       className={`p-3 rounded-lg max-w-md ${
-                        msg.type === "voice" ? "bg-green-500/20 border border-green-500/30" : "bg-gray-800/50"
+                        msg.type === "voice" ? "bg-[#00D4AA]/20 border border-[#00D4AA]/30" : "bg-[#16213E]/50"
                       }`}
                     >
                       {msg.type === "voice" ? (
                         <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm" className="text-green-400 hover:bg-green-500/20">
+                          <Button variant="ghost" size="sm" className="text-[#00D4AA] hover:bg-[#00D4AA]/20">
                             <Volume2 className="w-4 h-4" />
                           </Button>
-                          <span className="text-green-400">{msg.message}</span>
+                          <span className="text-[#00D4AA]">{msg.message}</span>
                         </div>
                       ) : (
                         <p className="text-gray-300 break-words">{msg.message}</p>
@@ -347,8 +313,8 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                             key={index}
                             variant="outline"
                             size="sm"
-                            onClick={() => handleEmojiReaction(msg.id, reaction.emoji)}
-                            className="h-6 px-2 border-gray-700 hover:border-purple-500 bg-gray-800/30 text-xs"
+                            onClick={() => handleEmojiReaction(msg.id as number, reaction.emoji)}
+                            className="h-6 px-2 border-gray-700 hover:border-[#FF6B35] bg-[#16213E]/30 text-xs"
                           >
                             {reaction.emoji} {reaction.count}
                           </Button>
@@ -364,8 +330,8 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                             key={emoji}
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleEmojiReaction(msg.id, emoji)}
-                            className="h-6 w-6 p-0 text-xs hover:bg-gray-700"
+                            onClick={() => handleEmojiReaction(msg.id as number, emoji)}
+                            className="h-6 w-6 p-0 text-xs hover:bg-[#16213E]"
                           >
                             {emoji}
                           </Button>
@@ -382,14 +348,14 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
       </Card>
 
       {/* Zone de saisie */}
-      <Card className="bg-[#1a1a1a] border-gray-800 p-4 mt-4">
+      <Card className="bg-[#1A1A2E] border-[#FF6B35]/20 p-4 mt-4">
         <div className="flex items-center space-x-2">
           <div className="flex-1 relative">
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Tapez votre message..."
-              className="bg-gray-800 border-gray-700 text-white pr-20"
+              className="bg-[#16213E] border-[#FF6B35]/30 text-white pr-20 focus:border-[#FF6B35]"
               onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
             />
 
@@ -399,7 +365,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="h-6 w-6 p-0 text-gray-400 hover:text-yellow-400"
+                className="h-6 w-6 p-0 text-gray-400 hover:text-[#FFD23F]"
               >
                 <Smile className="w-4 h-4" />
               </Button>
@@ -407,7 +373,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                 variant="ghost"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="h-6 w-6 p-0 text-gray-400 hover:text-blue-400"
+                className="h-6 w-6 p-0 text-gray-400 hover:text-[#00D4AA]"
               >
                 <ImageIcon className="w-4 h-4" />
               </Button>
@@ -419,9 +385,9 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
             variant="outline"
             size="sm"
             onMouseDown={handleVoiceRecord}
-            onMouseUp={() => setIsRecording(false)}
-            className={`border-gray-700 ${
-              isRecording ? "bg-red-500/20 text-red-400 border-red-500/30" : "text-gray-400 hover:text-green-400"
+            onMouseUp={() => setIsRecording(false)}  
+            className={`border-[#16213E] ${
+              isRecording ? "bg-red-500/20 text-red-400 border-red-500/30" : "text-gray-400 hover:text-[#00D4AA]"
             }`}
           >
             {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
@@ -430,7 +396,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
           {/* Bouton d'envoi */}
           <Button
             onClick={handleSendMessage}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+            className="bg-gradient-to-r from-[#FF6B35] to-[#FFD23F] hover:shadow-[0_0_15px_rgba(255,107,53,0.4)] transition-all duration-300"
           >
             <Send className="w-4 h-4" />
           </Button>
@@ -438,7 +404,7 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
 
         {/* Picker d'emojis */}
         {showEmojiPicker && (
-          <div className="mt-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
+          <div className="mt-3 p-3 bg-[#16213E] rounded-lg border border-[#FF6B35]/30">
             <div className="grid grid-cols-10 gap-2">
               {quickEmojis.map((emoji) => (
                 <Button
@@ -448,8 +414,8 @@ export function AdvancedChat({ chatType, groupId, onVoiceChatToggle }: AdvancedC
                   onClick={() => {
                     setNewMessage((prev) => prev + emoji)
                     setShowEmojiPicker(false)
-                  }}
-                  className="h-8 w-8 p-0 text-lg hover:bg-gray-700"
+                  }}  
+                  className="h-8 w-8 p-0 text-lg hover:bg-[#FF6B35]/20"
                 >
                   {emoji}
                 </Button>
