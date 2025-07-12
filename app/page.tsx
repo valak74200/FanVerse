@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export default function RedirectPage() {
   const router = useRouter()
   
   useEffect(() => {
-    router.push('/welcome')
+    router.push('/dashboard')
   }, [router])
   
   return null
