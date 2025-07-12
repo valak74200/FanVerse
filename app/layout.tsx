@@ -5,6 +5,8 @@ import { Inter } from "next/font/google"
 import type React from "react"
 import IridescenceBackground from "./components/fanverse/chiliz/IridescenceBackground"
 import GridOverlay from "./components/fanverse/chiliz/GridOverlay"
+import Web3Background from "./components/fanverse/chiliz/Web3Background"
+import SoundEffects from "./components/fanverse/chiliz/SoundEffects"
 import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -28,7 +30,8 @@ export default function RootLayout({
           speed={0.5}
           amplitude={0.15}
         />
-        <GridOverlay />
+        <Web3Background />
+        <SoundEffects />
         {children}
         <Toaster />
       </body>
