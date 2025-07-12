@@ -13,7 +13,6 @@ import { NFTMoments } from "@/components/nft-moments"
 import { NFTMarketplace } from "@/components/nft-marketplace"
 import { NFTCollection } from "@/components/nft-collection"
 import { EmotionPanel } from "@/components/stadium/EmotionPanel"
-import { AdvancedChat } from "@/components/advanced-chat"
 import dynamic from "next/dynamic"
 import { 
   Users, 
