@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiliz Fan Engagement</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; color: #333; }
+        #app-container { display: flex; width: 95%; max-width: 1400px; background-color: #fff; box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); border-radius: 8px; overflow: hidden; margin-top: 20px; flex-wrap: wrap; }
+        #left-panel, #center-panel, #right-panel { padding: 20px; box-sizing: border-box; border-right: 1px solid #eee; min-height: 800px; }
+        #left-panel { flex: 1; min-width: 250px; max-width: 300px; display: flex; flex-direction: column; gap: 15px; }
+        #center-panel { flex: 2; min-width: 400px; display: flex; flex-direction: column; gap: 20px; border-right: 1px solid #eee; }
+        #right-panel { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 20px; border-right: none; }
+        h2 { font-size: 1.4em; margin-bottom: 15px; color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+        button { padding: 10px 15px; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer; transition: background-color 0.2s; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
+        input, textarea { width: calc(100% - 22px); padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .chat-messages { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; border-radius: 5px; }
+        .message { margin-bottom: 10px; }
+        .message strong { color: #007bff; }
+        .emotion-button { margin: 5px; padding: 10px 15px; border-radius: 5px; cursor: pointer; background-color: #6c757d; color: white; }
+        .emotion-button:hover { background-color: #5a6268; }
+        .action-card { background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .action-card h3 { margin: 0 0 10px 0; font-size: 1.1em; }
+        .action-card .votes { margin: 10px 0; font-size: 1.1em; }
+        .action-card .votes-yes { color: #28a745; font-weight: bold; margin-right: 15px; }
+        .action-card .votes-no { color: #dc3545; font-weight: bold; }
+        .action-card .result { font-weight: bold; font-size: 1.2em; padding: 10px; border-radius: 5px; text-align: center; margin-top: 10px; }
+        .result.success { background-color: #e9f7ef; color: #28a745; }
+        .result.failed { background-color: #fdeded; color: #dc3545; }
+        #bet-info { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <!-- Left Panel -->
+        <div id="left-panel">
+            <div id="login-section">
+                <h2>Connexion</h2>
+                <input type="text" id="userIdInput" placeholder="Entrez votre ID utilisateur">
+                <button id="loginButton">Se connecter</button>
+                <p id="loginMessage" style="color: red;"></p>
+            </div>
+            <div id="user-info" style="display: none;">
+                <h2>Bienvenue, <span id="displayUserId"></span></h2>
+                <p>Solde CHZ : <span id="chzBalance">0</span></p>
+            </div>
+            <div id="emotion-section" style="display: none;">
+                <h2>Émotions</h2>
+                <button class="emotion-button" data-emotion="rage">Rage 😡</button>
+                <button class="emotion-button" data-emotion="shock">Choc 😲</button>
+                <button class="emotion-button" data-emotion="love">Amour 🥰</button>
+                <button class="emotion-button" data-emotion="hype">Hype 🎉</button>
+                <div>
+                    <p>Rage : <span id="rageCount">0</span></p>
+                    <p>Choc : <span id="shockCount">0</span></p>
+                    <p>Amour : <span id="loveCount">0</span></p>
+                    <p>Hype : <span id="hypeCount">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Panel -->
+        <div id="center-panel">
+            <div id="bet-section" style="display: none;">
+                <h2>Paris <span id="bet-timer" style="color: #dc3545; margin-left: 15px;"></span></h2>
+                <p id="bet-question">Aucun pari en cours.</p>
+                <div id="bet-options"></div>
+                <input type="number" id="bet-amount" placeholder="Montant à parier (CHZ)">
+                <p id="bet-info"></p>
+            </div>
+            <div id="chat-section" style="display: none;">
+                <h2>Chat Général</h2>
+                <div class="chat-messages" id="chat-messages"></div>
+                <input type="text" id="chat-input" placeholder="Entrez votre message">
+                <button id="send-chat-button">Envoyer</button>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div id="right-panel">
+            <div id="action-section" style="display: none;">
+                <h2>Proposer une Action</h2>
+                <input type="text" id="action-input" placeholder="Ex: Chanter la marseillaise">
+                <button id="propose-action-button">Proposer</button>
+                <hr style="margin: 20px 0;">
+                <h2>Actions en Cours</h2>
+                <div id="active-actions-container"><p>Aucune action en cours.</p></div>
+                <hr style="margin: 20px 0;">
+                <h2>Actions Terminées</h2>
+                <div id="past-actions-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io('http://localhost:3000');
+
+        // --- DOM Elements ---
+        const loginSection = document.getElementById('login-section');
+        const loginButton = document.getElementById('loginButton');
+        const userIdInput = document.getElementById('userIdInput');
+        const loginMessage = document.getElementById('loginMessage');
+        const userInfo = document.getElementById('user-info');
+        const displayUserId = document.getElementById('displayUserId');
+        const chzBalance = document.getElementById('chzBalance');
+        const betQuestion = document.getElementById('bet-question');
+        const betOptionsContainer = document.getElementById('bet-options');
+        const betAmountInput = document.getElementById('bet-amount');
+        const betInfo = document.getElementById('bet-info');
+        const betTimerSpan = document.getElementById('bet-timer');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendChatButton = document.getElementById('send-chat-button');
+        
+        let betTimerInterval = null;
+
+        // --- LOGIN ---
+        loginButton.addEventListener('click', () => {
+            const userId = userIdInput.value.trim();
+            if (userId) socket.emit('authenticate', { userId });
+            else loginMessage.textContent = 'Veuillez entrer un ID utilisateur.';
+        });
+
+        socket.on('authenticated', (data) => {
+            loginSection.style.display = 'none';
+            ['user-info', 'emotion-section', 'bet-section', 'chat-section', 'action-section'].forEach(id => document.getElementById(id).style.display = 'block');
+            displayUserId.textContent = data.userId;
+            chzBalance.textContent = data.chzBalance.toFixed(2);
+        });
+
+        socket.on('login_error', (data) => { loginMessage.textContent = data.message; });
+
+        // --- CHAT ---
+        sendChatButton.addEventListener('click', () => {
+            const message = chatInput.value.trim();
+            if (message) {
+                socket.emit('send_message', { message });
+                chatInput.value = '';
+            }
+        });
+        socket.on('new_message', (msg) => {
+            const p = document.createElement('p');
+            p.classList.add('message');
+            p.innerHTML = `<strong>${msg.userId}</strong>: ${msg.message}`;
+            chatMessages.appendChild(p);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        // --- EMOTIONS ---
+        document.querySelectorAll('.emotion-button').forEach(button => {
+            button.addEventListener('click', () => {
+                socket.emit('send_emotion', { emotionType: button.dataset.emotion });
+            });
+        });
+        socket.on('emotion_update', (data) => {
+            document.getElementById('rageCount').textContent = data.rage;
+            document.getElementById('shockCount').textContent = data.shock;
+            document.getElementById('loveCount').textContent = data.love;
+            document.getElementById('hypeCount').textContent = data.hype;
+        });
+
+        // =======================================================
+        // SECTION PARIS (CLIENT) - ENTIÈREMENT CORRIGÉE
+        // =======================================================
+        socket.on('new_bet', (bet) => {
+            betQuestion.textContent = bet.question;
+            betOptionsContainer.innerHTML = '';
+            betInfo.textContent = '';
+            betAmountInput.value = '';
+            betAmountInput.disabled = false;
+
+            if (betTimerInterval) clearInterval(betTimerInterval);
+            const endTime = Date.now() + bet.duration;
+            
+            betTimerInterval = setInterval(() => {
+                const remaining = endTime - Date.now();
+                if (remaining <= 0) {
+                    clearInterval(betTimerInterval);
+                    betTimerSpan.textContent = "00:00";
+                    return;
+                }
+                const minutes = Math.floor((remaining / 1000) / 60);
+                const seconds = Math.floor((remaining / 1000) % 60);
+                betTimerSpan.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+
+            bet.options.forEach((optionText, index) => {
+                const button = document.createElement('button');
+                button.textContent = optionText;
+                button.onclick = () => placeBet(index);
+                betOptionsContainer.appendChild(button);
+            });
+        });
+
+        function placeBet(optionIndex) {
+            const amount = parseInt(betAmountInput.value, 10);
+            if (isNaN(amount) || amount <= 0) {
+                betInfo.style.color = 'red';
+                betInfo.textContent = 'Veuillez entrer un montant valide.';
+                return;
+            }
+            socket.emit('place_bet', { optionIndex: optionIndex, amount: amount });
+        }
+
+        socket.on('bet_accepted', (data) => {
+            betInfo.style.color = 'green';
+            betInfo.textContent = data.message;
+            // --- CORRECTION : Mettre à jour le solde immédiatement ---
+            chzBalance.textContent = data.newBalance.toFixed(2);
+            // Bloquer les paris une fois qu'un pari a été accepté
+            betOptionsContainer.innerHTML = '<p><i>Pari enregistré. Bonne chance !</i></p>';
+            betAmountInput.disabled = true;
+        });
+
+        socket.on('bet_error', (data) => {
+            betInfo.style.color = 'red';
+            betInfo.textContent = data.message;
+        });
+
+        socket.on('bet_closed', (data) => {
+            if (betTimerInterval) clearInterval(betTimerInterval);
+            betTimerSpan.textContent = "";
+            betInfo.style.color = '#333';
+            betInfo.textContent = data.message;
+            betAmountInput.disabled = true;
+            // Nettoyer les boutons si l'utilisateur n'a pas déjà parié
+            if (!betOptionsContainer.querySelector('p')) {
+                betOptionsContainer.innerHTML = '';
+            }
+        });
+
+        // --- CORRECTION : Ajout du handler manquant pour les résultats ---
+        socket.on('bet_result', (data) => {
+            // Mettre à jour le message avec le résultat
+            if (data.winnings > 0) {
+                betInfo.style.color = 'green'; // Victoire
+            } else {
+                betInfo.style.color = '#E85B0C'; // Défaite (orange pour être moins agressif que le rouge)
+            }
+            betInfo.textContent = data.message;
+
+            // Mettre à jour le solde final
+            chzBalance.textContent = data.newBalance.toFixed(2);
+            
+            // Nettoyer la question et les options pour le prochain tour
+            betQuestion.textContent = `L'option gagnante était : ${data.winningOption}`;
+            betOptionsContainer.innerHTML = '<p><i>Prochain pari dans quelques instants...</i></p>';
+        });
+
+        // --- SECTION ACTIONS COLLECTIVES (INCHANGÉE) ---
+        const actionInput = document.getElementById('action-input');
+        const proposeActionButton = document.getElementById('propose-action-button');
+        const activeActionsContainer = document.getElementById('active-actions-container');
+        const pastActionsContainer = document.getElementById('past-actions-container');
+
+        proposeActionButton.addEventListener('click', () => {
+            const actionText = actionInput.value.trim();
+            if (actionText) {
+                socket.emit('create_action', { action: actionText });
+                actionInput.value = '';
+            }
+        });
+        
+        socket.on('new_action', (action) => {
+            if (activeActionsContainer.querySelector('p')) {
+                activeActionsContainer.innerHTML = ''; 
+            }
+            displayNewAction(action);
+        });
+
+        socket.on('action_update', (updatedAction) => {
+            updateActionDisplay(updatedAction);
+        });
+
+        socket.on('action_result', (result) => {
+            finalizeActionDisplay(result);
+        });
+        
+        socket.on('action_error', (error) => {
+            alert(`Erreur d'action: ${error.message}`);
+        });
+
+        function displayNewAction(action) {
+            const actionCard = document.createElement('div');
+            actionCard.className = 'action-card';
+            actionCard.id = `action-${action._id}`;
+            actionCard.innerHTML = `
+                <h3>${action.action}</h3>
+                <p>Proposé par : ${action.proposer}</p>
+                <div class="votes">
+                    <span class="votes-yes">OUI : ${action.yesVotes}</span>
+                    <span class="votes-no">NON : ${action.noVotes}</span>
+                </div>
+                <div class="vote-buttons">
+                    <button onclick="vote('${action._id}', 'yes')">Voter OUI</button>
+                    <button onclick="vote('${action._id}', 'no')">Voter NON</button>
+                </div>
+            `;
+            activeActionsContainer.prepend(actionCard);
+        }
+
+        function updateActionDisplay(action) {
+            const actionCard = document.getElementById(`action-${action._id}`);
+            if (actionCard) {
+                actionCard.querySelector('.votes-yes').innerText = `OUI : ${action.yesVotes}`;
+                actionCard.querySelector('.votes-no').innerText = `NON : ${action.noVotes}`;
+            }
+        }
+
+        function finalizeActionDisplay(result) {
+            const actionCard = document.getElementById(`action-${result.actionId}`);
+            if (actionCard) {
+                actionCard.querySelector('.vote-buttons')?.remove();
+                const resultDiv = document.createElement('div');
+                resultDiv.className = `result ${result.status}`;
+                resultDiv.innerText = result.status === 'success' ? 'RÉUSSIE' : 'ÉCHOUÉE';
+                actionCard.appendChild(resultDiv);
+                updateActionDisplay({ _id: result.actionId, yesVotes: result.yes, noVotes: result.no });
+                pastActionsContainer.prepend(actionCard); 
+                if (activeActionsContainer.children.length === 0) {
+                    activeActionsContainer.innerHTML = '<p>Aucune action en cours.</p>';
+                }
+            }
+        }
+
+        function vote(actionId, voteType) {
+            socket.emit('vote_action', { actionId: actionId, vote: voteType });
+        }
+    </script>
+</body>
+</html>
