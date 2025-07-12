@@ -42,7 +42,8 @@ import {
   Menu,
   X,
   ChevronRight,
-  LogOut
+  LogOut,
+  ShoppingCart
 } from "lucide-react"
 
 // Charger VirtualStadium uniquement côté client
