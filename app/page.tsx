@@ -2,154 +2,70 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { AnimatedBackground } from "@/components/animated-background"
-import { Navigation } from "@/components/navigation"
-import { DashboardHeader } from "@/components/dashboard-header"
-import { DashboardStats } from "@/components/dashboard-stats"
-import { PortfolioChart } from "@/components/portfolio-chart"
-import { QuickActions } from "@/components/quick-actions"
-import { RecentActivity } from "@/components/recent-activity"
+import Header from "./components/fanverse/chiliz/Header"
+import Dashboard from "./components/fanverse/chiliz/Dashboard"
 
-export default function Home() {
-  const [activeSection, setActiveSection] = useState("dashboard")
+const textVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.2 + 0.5,
+      duration: 0.5,
+    },
+  }),
+}
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case "dashboard":
-        return (
-          <motion.div
-            key="dashboard"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
-            <DashboardStats />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <PortfolioChart />
-              <RecentActivity />
-            </div>
-            <QuickActions />
-          </motion.div>
-        )
-      case "wallet":
-        return (
-          <motion.div
-            key="wallet"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="text-center py-20"
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Wallet Section</h2>
-            <p className="text-gray-400">Wallet functionality coming soon...</p>
-          </motion.div>
-        )
-      case "staking":
-        return (
-          <motion.div
-            key="staking"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="text-center py-20"
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Staking Section</h2>
-            <p className="text-gray-400">Staking functionality coming soon...</p>
-          </motion.div>
-        )
-      case "marketplace":
-        return (
-          <motion.div
-            key="marketplace"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="text-center py-20"
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Marketplace Section</h2>
-            <p className="text-gray-400">Marketplace functionality coming soon...</p>
-          </motion.div>
-        )
-      case "community":
-        return (
-          <motion.div
-            key="community"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="text-center py-20"
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Community Section</h2>
-            <p className="text-gray-400">Community functionality coming soon...</p>
-          </motion.div>
-        )
-      case "analytics":
-        return (
-          <motion.div
-            key="analytics"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="text-center py-20"
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Analytics Section</h2>
-            <p className="text-gray-400">Analytics functionality coming soon...</p>
-          </motion.div>
-        )
-      case "rewards":
-        return (
-          <motion.div
-            key="rewards"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="text-center py-20"
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Rewards Section</h2>
-            <p className="text-gray-400">Rewards functionality coming soon...</p>
-          </motion.div>
-        )
-      case "settings":
-        return (
-          <motion.div
-            key="settings"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="text-center py-20"
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Settings Section</h2>
-            <p className="text-gray-400">Settings functionality coming soon...</p>
-          </motion.div>
-        )
-      default:
-        return null
-    }
-  }
+export default function FanVersePage() {
+  const [showDashboard, setShowDashboard] = useState(false)
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
-      <AnimatedBackground />
-
-      <div className="relative z-10">
-        <Navigation activeSection={activeSection} onSectionChange={setActiveSection} />
-
-        <div className="lg:ml-64">
-          <DashboardHeader />
-
-          <main className="p-6">
-            <AnimatePresence mode="wait">{renderContent()}</AnimatePresence>
-          </main>
-        </div>
+    <div className="min-h-screen flex flex-col">
+      <div className="relative z-10 flex-grow flex flex-col">
+        <Header onLaunch={() => setShowDashboard(true)} />
+        <main className="flex-grow flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            {!showDashboard ? (
+              <motion.div
+                key="landing"
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                className="container mx-auto px-4 sm:px-6 lg:px-8 text-center"
+              >
+                <motion.h1
+                  custom={0}
+                  variants={textVariants}
+                  className="text-5xl md:text-7xl font-bold text-white tracking-tighter leading-tight"
+                >
+                  THE BLOCKCHAIN
+                </motion.h1>
+                <motion.h2
+                  custom={1}
+                  variants={textVariants}
+                  className="text-5xl md:text-7xl font-bold text-white tracking-tighter leading-tight text-shadow"
+                  style={{
+                    textShadow: "0 0 15px hsl(var(--primary) / 0.5), 0 0 30px hsl(var(--primary) / 0.3)",
+                  }}
+                >
+                  FOR FAN ENGAGEMENT
+                </motion.h2>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="dashboard"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full h-full pt-16"
+              >
+                <Dashboard />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
       </div>
     </div>
   )

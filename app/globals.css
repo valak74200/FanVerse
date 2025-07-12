@@ -2,51 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 9% 17%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --radius: 0.5rem;
-  }
+:root {
+  --background: 0 0% 4%;
+  --foreground: 0 0% 95%;
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-  }
+  /* Red Family */
+  --primary: 12 88% 59%; /* Fiery Red-Orange */
+  --primary-foreground: 0 0% 98%;
+  --secondary: 12 30% 25%; /* Muted, dark red */
+  --secondary-foreground: 0 0% 98%;
+  --card: 12 15% 10%; /* Very dark, desaturated red */
+  --card-foreground: 0 0% 95%;
+  --border: 12 20% 18%; /* Subtle border */
+  --input: 12 20% 14%; /* Input background */
+  --ring: 12 90% 65%; /* Focus ring */
+
+  /* Accent & Muted Tones */
+  --accent-comp: 180 80% 40%; /* Striking Cyan/Teal */
+  --accent-comp-foreground: 0 0% 98%;
+  --muted: 12 10% 40%; /* Desaturated red-gray */
+  --muted-foreground: 12 5% 65%;
+
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 0 0% 98%;
+  --popover: 12 15% 10%;
+  --popover-foreground: 0 0% 95%;
+  --accent: 12 88% 59%;
+  --accent-foreground: 0 0% 98%;
+}
+
+.dark {
+  --background: 0 0% 4%;
+  --foreground: 0 0% 95%;
+  --primary: 12 88% 59%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 12 30% 25%;
+  --secondary-foreground: 0 0% 98%;
+  --card: 12 15% 10%;
+  --card-foreground: 0 0% 95%;
+  --border: 12 20% 18%;
+  --input: 12 20% 14%;
+  --ring: 12 90% 65%;
+  --accent-comp: 180 80% 40%;
+  --accent-comp-foreground: 0 0% 98%;
+  --muted: 12 10% 40%;
+  --muted-foreground: 12 5% 65%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 0 0% 98%;
+  --popover: 12 15% 10%;
+  --popover-foreground: 0 0% 95%;
+  --accent: 12 88% 59%;
+  --accent-foreground: 0 0% 98%;
 }
 
 @layer base {
@@ -58,108 +64,112 @@
   }
 }
 
-/* Custom Chiliz Scrollbar */
+/* Futuristic HUD Panel Style */
+@layer components {
+  .hud-panel {
+    @apply relative bg-black/50 backdrop-blur-sm border border-border rounded-lg shadow-lg shadow-primary/5 transition-all duration-300;
+  }
+  .hud-panel::before,
+  .hud-panel::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: hsl(var(--primary) / 0.5);
+    border-style: solid;
+    transition: all 0.3s ease-in-out;
+  }
+  .hud-panel::before {
+    top: -2px;
+    left: -2px;
+    border-width: 2px 0 0 2px;
+    border-top-left-radius: 0.5rem;
+  }
+  .hud-panel::after {
+    bottom: -2px;
+    right: -2px;
+    border-width: 0 2px 2px 0;
+    border-bottom-right-radius: 0.5rem;
+  }
+  .hud-panel:hover::before,
+  .hud-panel:hover::after {
+    width: 30%;
+    height: 40%;
+    border-color: hsl(var(--primary));
+  }
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
+  background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #ff0000, #dc2626);
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: hsl(var(--primary) / 0.3);
+  border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: hsl(var(--primary) / 0.6);
 }
 
-/* Chiliz Glow Effects */
-.chiliz-glow {
-  box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
-}
-
-.chiliz-glow-strong {
-  box-shadow: 0 0 40px rgba(255, 0, 0, 0.6);
-}
-
-.chiliz-text-glow {
-  text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-}
-
-/* Glass Morphism Effects */
-.glass-chiliz {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 0, 0, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.glass-card {
-  background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(220, 38, 38, 0.05));
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-/* Gradient Animations */
-.gradient-animate {
-  background-size: 200% 200%;
-  animation: gradient 3s ease infinite;
-}
-
-/* Hover Effects */
-.hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(255, 0, 0, 0.2);
-}
-
-/* Loading States */
-.loading-shimmer {
-  background: linear-gradient(90deg, rgba(255, 0, 0, 0.1) 0%, rgba(255, 0, 0, 0.3) 50%, rgba(255, 0, 0, 0.1) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
+/* Custom utility classes for accent color */
+@layer utilities {
+  .text-accent-comp {
+    color: hsl(var(--accent-comp));
   }
-  100% {
-    background-position: 200% 0;
+  .bg-accent-comp {
+    background-color: hsl(var(--accent-comp));
   }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .glass-chiliz {
-    backdrop-filter: blur(10px);
+  .border-accent-comp {
+    border-color: hsl(var(--accent-comp));
   }
-}
-
-/* Accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .animate-float,
-  .animate-glow,
-  .animate-pulse-slow,
-  .animate-bounce-slow,
-  .animate-spin-slow,
-  .gradient-animate {
-    animation: none;
+  .hover\:bg-accent-comp\/10:hover {
+    background-color: hsl(var(--accent-comp) / 0.1);
   }
-}
+  .hover\:text-accent-comp:hover {
+    color: hsl(var(--accent-comp));
+  }
 
-/* Focus States */
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid rgba(255, 0, 0, 0.8);
-  outline-offset: 2px;
+  .text-glow-primary {
+    text-shadow: 0 0 8px hsl(var(--primary) / 0.6), 0 0 20px hsl(var(--primary) / 0.4);
+  }
+
+  .box-glow-primary {
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.2), 0 0 30px hsl(var(--primary) / 0.1);
+  }
+
+  .shimmer-effect {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer-effect::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.6s ease-in-out;
+  }
+
+  .group:hover .shimmer-effect::after {
+    left: 150%;
+  }
+
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 5px hsl(var(--primary) / 0.3), 0 0 10px hsl(var(--primary) / 0.2);
+    }
+    50% {
+      box-shadow: 0 0 15px hsl(var(--primary) / 0.6), 0 0 25px hsl(var(--primary) / 0.4);
+    }
+  }
+  .pulse-glow-primary {
+    animation: pulse-glow 2.5s infinite ease-in-out;
+  }
 }
