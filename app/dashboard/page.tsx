@@ -109,7 +109,7 @@ export default function Dashboard() {
 
           {/* Sidebar */}
           <AnimatePresence>
-            {(sidebarOpen || window.innerWidth >= 1024) && (
+            {(sidebarOpen || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
               <motion.aside
                 initial={{ x: -300, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
