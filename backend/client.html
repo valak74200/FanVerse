@@ -439,7 +439,7 @@
     </div>
 
     <script>
-        const socket = io('http://localhost:3000');
+        const socket = io('http://localhost:3001');
         const TESTNET_CONFIG = { chainId: '0x15b32', chainName: 'Chiliz Spicy Testnet', nativeCurrency: { name: 'Chiliz', symbol: 'CHZ', decimals: 18 }, rpcUrls: ['https://spicy-rpc.chiliz.com/'], blockExplorerUrls: ['https://testnet.chiliscan.com/'] };
         let provider = null; let signer = null; let walletAddress = null; let blockchainConnected = false;
         let currentBetData = null; let selectedBlockchainOption = null;

@@ -295,7 +295,10 @@ app.use(express.static('public'));
 
 // ✅ CONFIGURATION CORS ULTRA-PERMISSIVE POUR DÉVELOPPEMENT
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'], // Next.js + Backend
+    origin: [
+        'http://localhost:3001',
+        'http://localhost:5500' // <-- Ajoute ton frontend ici !
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -307,7 +310,10 @@ app.options('*', cors());
 // ✅ SOCKET.IO CORS
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:3000', 'http://localhost:3001'],
+        origin: [
+            'http://localhost:3001',
+            'http://localhost:5500' // <-- Ajoute ton frontend ici aussi !
+        ],
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -858,7 +864,7 @@ setInterval(async () => {
     } catch (error) {
         console.error('Erreur lors de l\'agrégation des émotions:', error);
     }
-}, 3000);
+}, 3001);
 
 // --- PAGE D'ACCUEIL AVEC DOCUMENTATION ---
 app.get('/', (req, res) => {
