@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiliz Fan Engagement</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            color: #333;
+        }
+        #app-container {
+            display: flex;
+            width: 95%;
+            max-width: 1400px;
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        #left-panel, #center-panel, #right-panel {
+            padding: 20px;
+            box-sizing: border-box;
+            border-right: 1px solid #eee;
+            min-height: 800px;
+        }
+        #left-panel {
+            flex: 1;
+            min-width: 250px;
+            max-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #center-panel {
+            flex: 2;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border-right: 1px solid #eee;
+        }
+        #right-panel {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border-right: none;
+        }
+        h2 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input, textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+        .message strong {
+            color: #007bff;
+        }
+        .emotion-button {
+            margin: 5px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #6c757d;
+            color: white;
+        }
+        .emotion-button:hover {
+            background-color: #5a6268;
+        }
+        #private-invite-alert {
+            display: none;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            background-color: #ffc107;
+            color: #856404;
+        }
+        #private-invite-alert button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <!-- Connexion -->
+        <div id="left-panel">
+            <div id="login-section">
+                <h2>Connexion</h2>
+                <input type="text" id="userIdInput" placeholder="Entrez votre ID utilisateur">
+                <button id="loginButton">Se connecter</button>
+                <p id="loginMessage" style="color: red;"></p>
+            </div>
+
+            <div id="user-info" style="display: none;">
+                <h2>Bienvenue, <span id="displayUserId"></span></h2>
+                <p>Solde CHZ : <span id="chzBalance">0</span></p>
+            </div>
+
+            <div id="emotion-section" style="display: none;">
+                <h2>Émotions</h2>
+                <button class="emotion-button" data-emotion="rage">Rage 😡</button>
+                <button class="emotion-button" data-emotion="shock">Choc 😲</button>
+                <button class="emotion-button" data-emotion="love">Amour 🥰</button>
+                <button class="emotion-button" data-emotion="hype">Hype 🎉</button>
+                <div>
+                    <p>Rage : <span id="rageCount">0</span></p>
+                    <p>Choc : <span id="shockCount">0</span></p>
+                    <p>Amour : <span id="loveCount">0</span></p>
+                    <p>Hype : <span id="hypeCount">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paris -->
+        <div id="center-panel">
+            <div id="bet-section" style="display: none;">
+                <h2>Paris</h2>
+                <p id="bet-question">Aucun pari en cours.</p>
+                <div id="bet-options"></div>
+                <input type="number" id="bet-amount" placeholder="Montant à parier (CHZ)">
+                <p id="bet-info"></p>
+            </div>
+
+            <div id="chat-section" style="display: none;">
+                <h2>Chat Général</h2>
+                <div class="chat-messages" id="chat-messages"></div>
+                <input type="text" id="chat-input" placeholder="Entrez votre message">
+                <button id="send-chat-button">Envoyer</button>
+            </div>
+        </div>
+
+        <!-- Actions Collectives & Chat Privé -->
+        <div id="right-panel">
+            <div id="action-section" style="display: none;">
+                <h2>Actions Collectives</h2>
+                <input type="text" id="action-input" placeholder="Proposez une action collective">
+                <button id="propose-action-button">Proposer</button>
+                <div id="current-action">
+                    <p>Action en cours : <span id="action-description">Aucune</span></p>
+                    <p>Votes OUI : <span id="action-yes">0</span></p>
+                    <p>Votes NON : <span id="action-no">0</span></p>
+                    <button id="vote-yes-button">Voter OUI</button>
+                    <button id="vote-no-button">Voter NON</button>
+                </div>
+            </div>
+
+            <div id="private-chat-section" style="display: none;">
+                <h2>Chat Privé</h2>
+                <input type="text" id="private-user-id" placeholder="ID utilisateur à inviter">
+                <button id="invite-private-chat-button">Inviter</button>
+                <div id="private-invite-alert">
+                    <p>Invitation reçue de <span id="inviter-id"></span></p>
+                    <button id="accept-private-invite-button">Accepter</button>
+                    <button id="decline-private-invite-button">Refuser</button>
+                </div>
+                <div class="chat-messages" id="private-chat-messages"></div>
+                <input type="text" id="private-chat-input" placeholder="Message privé">
+                <button id="send-private-chat-button">Envoyer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io('http://localhost:3000');
+
+        // Connexion
+        const loginSection = document.getElementById('login-section');
+        const loginButton = document.getElementById('loginButton');
+        const userIdInput = document.getElementById('userIdInput');
+        const loginMessage = document.getElementById('loginMessage');
+        const userInfo = document.getElementById('user-info');
+        const displayUserId = document.getElementById('displayUserId');
+        const chzBalance = document.getElementById('chzBalance');
+
+        loginButton.addEventListener('click', () => {
+            const userId = userIdInput.value.trim();
+            if (userId) {
+                socket.emit('login', { userId });
+            } else {
+                loginMessage.textContent = 'Veuillez entrer un ID utilisateur.';
+            }
+        });
+
+        socket.on('login_success', (data) => {
+            loginSection.style.display = 'none';
+            userInfo.style.display = 'block';
+            document.getElementById('emotion-section').style.display = 'block';
+            document.getElementById('bet-section').style.display = 'block';
+            document.getElementById('chat-section').style.display = 'block';
+            document.getElementById('action-section').style.display = 'block';
+            document.getElementById('private-chat-section').style.display = 'block';
+
+            displayUserId.textContent = data.userId;
+            chzBalance.textContent = data.chzBalance.toFixed(2);
+        });
+
+        socket.on('login_error', (data) => {
+            loginMessage.textContent = data.message;
+        });
+
+        // Émotions
+        document.querySelectorAll('.emotion-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const emotion = button.dataset.emotion;
+                socket.emit('send_emotion', { emotionType: emotion });
+            });
+        });
+
+        socket.on('emotion_update', (data) => {
+            document.getElementById('rageCount').textContent = data.rage;
+            document.getElementById('shockCount').textContent = data.shock;
+            document.getElementById('loveCount').textContent = data.love;
+            document.getElementById('hypeCount').textContent = data.hype;
+        });
+
+        // Paris
+        const betQuestion = document.getElementById('bet-question');
+        const betOptions = document.getElementById('bet-options');
+        const betAmount = document.getElementById('bet-amount');
+        const betInfo = document.getElementById('bet-info');
+
+        socket.on('new_bet_proposal', (bet) => {
+            betQuestion.textContent = bet.question;
+            betOptions.innerHTML = '';
+            bet.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.addEventListener('click', () => {
+                    const amount = parseFloat(betAmount.value);
+                    if (amount > 0) {
+                        socket.emit('place_bet', { betId: bet.id, option, amount });
+                    } else {
+                        betInfo.textContent = 'Veuillez entrer un montant valide.';
+                    }
+                });
+                betOptions.appendChild(button);
+            });
+        });
+
+        socket.on('bet_update', (data) => {
+            betInfo.textContent = `Pot actuel : ${data.totalPot} CHZ`;
+        });
+
+        socket.on('bet_results', (data) => {
+            alert(`Résultat du pari : ${data.message}`);
+        });
+
+        // Chat Général
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendChatButton = document.getElementById('send-chat-button');
+
+        sendChatButton.addEventListener('click', () => {
+            const message = chatInput.value.trim();
+            if (message) {
+                socket.emit('send_message', { message });
+                chatInput.value = '';
+            }
+        });
+
+        socket.on('new_message', (msg) => {
+            const p = document.createElement('p');
+            p.classList.add('message');
+            p.innerHTML = `<strong>${msg.userId}</strong>: ${msg.message}`;
+            chatMessages.appendChild(p);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        // Actions Collectives
+        const actionInput = document.getElementById('action-input');
+        const proposeActionButton = document.getElementById('propose-action-button');
+        const actionDescription = document.getElementById('action-description');
+        const actionYes = document.getElementById('action-yes');
+        const actionNo = document.getElementById('action-no');
+        const voteYesButton = document.getElementById('vote-yes-button');
+        const voteNoButton = document.getElementById('vote-no-button');
+
+        proposeActionButton.addEventListener('click', () => {
+            const action = actionInput.value.trim();
+            if (action) {
+                socket.emit('propose_collective_action', { action });
+                actionInput.value = '';
+            }
+        });
+
+        voteYesButton.addEventListener('click', () => {
+            socket.emit('vote_collective_action', { vote: 'yes' });
+        });
+
+        voteNoButton.addEventListener('click', () => {
+            socket.emit('vote_collective_action', { vote: 'no' });
+        });
+
+        socket.on('collective_action_proposal', (action) => {
+            actionDescription.textContent = action.action;
+            actionYes.textContent = action.yes;
+            actionNo.textContent = action.no;
+        });
+
+        socket.on('collective_action_update', (action) => {
+            actionDescription.textContent = action.action;
+            actionYes.textContent = action.yes;
+            actionNo.textContent = action.no;
+        });
+
+        // Chat Privé
+        const privateChatMessages = document.getElementById('private-chat-messages');
+        const privateChatInput = document.getElementById('private-chat-input');
+        const sendPrivateChatButton = document.getElementById('send-private-chat-button');
+        const privateInviteAlert = document.getElementById('private-invite-alert');
+        const inviterIdSpan = document.getElementById('inviter-id');
+        const acceptPrivateInviteButton = document.getElementById('accept-private-invite-button');
+        const declinePrivateInviteButton = document.getElementById('decline-private-invite-button');
+
+        socket.on('private_room_invite', (data) => {
+            privateInviteAlert.style.display = 'block';
+            inviterIdSpan.textContent = data.inviterId;
+
+            acceptPrivateInviteButton.addEventListener('click', () => {
+                socket.emit('accept_private_invite', { inviterId: data.inviterId, roomId: data.roomId });
+                privateInviteAlert.style.display = 'none';
+            });
+
+            declinePrivateInviteButton.addEventListener('click', () => {
+                socket.emit('decline_private_invite', { inviterId: data.inviterId, roomId: data.roomId });
+                privateInviteAlert.style.display = 'none';
+            });
+        });
+
+        sendPrivateChatButton.addEventListener('click', () => {
+            const message = privateChatInput.value.trim();
+            if (message) {
+                socket.emit('send_private_message', { message });
+                privateChatInput.value = '';
+            }
+        });
+
+        socket.on('new_private_message', (msg) => {
+            const p = document.createElement('p');
+            p.classList.add('message');
+            p.innerHTML = `<strong>${msg.userId}</strong>: ${msg.message}`;
+            privateChatMessages.appendChild(p);
+            privateChatMessages.scrollTop = privateChatMessages.scrollHeight;
+        });
+    </script>
+</body>
+</html>

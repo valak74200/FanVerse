@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import Header from "./components/fanverse/chiliz/Header"
 import Dashboard from "./components/fanverse/chiliz/Dashboard"
 import Web3Background from "./components/fanverse/chiliz/Web3Background"
-import StadeViewer3D from "./components/fanverse/chiliz/StadeViewer3D"
+import IridescenceBackground from "./components/fanverse/chiliz/IridescenceBackground"
 
 const textVariants: any = {
   hidden: { opacity: 0, y: 50, scale: 0.8 },
@@ -50,42 +50,58 @@ const floatingVariants: any = {
 export default function FanVersePage() {
   const router = useRouter()
   const [showDashboard, setShowDashboard] = useState(false)
-  const [show3DStade, setShow3DStade] = useState(false)
-  const [isFullscreen3D, setIsFullscreen3D] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const cursorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    let animationId: number
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY })
+      // Utiliser requestAnimationFrame pour optimiser les performances
+      if (animationId) {
+        cancelAnimationFrame(animationId)
+      }
+      
+      animationId = requestAnimationFrame(() => {
+        if (cursorRef.current) {
+          cursorRef.current.style.transform = `translate(${e.clientX - 12}px, ${e.clientY - 12}px)`
+        }
+      })
     }
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
+    
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      if (animationId) {
+        cancelAnimationFrame(animationId)
+      }
+    }
   }, [])
 
   const handleLaunchTribune = () => {
     router.push('/tribune')
   }
 
-  const handleShow3DStade = () => {
-    setShow3DStade(true)
-  }
 
-  const handleToggleFullscreen3D = () => {
-    setIsFullscreen3D(!isFullscreen3D)
-  }
 
   return (
     <div className="min-h-screen flex flex-col overflow-hidden">
+      <IridescenceBackground
+        color={[0.98, 0.34, 0.2]} // Fiery Red-Orange
+        speed={0.5}
+        amplitude={0.15}
+      />
       <Web3Background />
       <div className="relative z-10 flex-grow flex flex-col">
         <Header onLaunch={handleLaunchTribune} />
         <main className="flex-grow flex items-center justify-center relative">
-          {/* Curseur personnalisé lumineux */}
+          {/* Curseur personnalisé lumineux optimisé */}
           <motion.div
+            ref={cursorRef}
             className="fixed w-6 h-6 rounded-full bg-primary/30 backdrop-blur-sm border border-primary/50 pointer-events-none z-50"
             style={{
-              left: mousePosition.x - 12,
-              top: mousePosition.y - 12,
+              left: 0,
+              top: 0,
+              willChange: 'transform'
             }}
             animate={{
               scale: [1, 1.2, 1],
@@ -217,50 +233,10 @@ export default function FanVersePage() {
                     />
                   </motion.button>
 
-                  {/* Bouton pour afficher le stade 3D */}
-                  <motion.button
-                    className="px-8 py-4 bg-gradient-to-r from-accent-comp/80 to-primary/80 text-white rounded-full font-semibold text-lg shadow-lg shadow-accent-comp/20 hover:shadow-accent-comp/40 transition-all duration-500 border border-accent-comp/30 hover:border-accent-comp/50"
-                    whileHover={{ 
-                      scale: 1.05, 
-                      y: -2,
-                      boxShadow: "0 20px 40px -10px rgba(255, 165, 0, 0.3)"
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleShow3DStade}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 3.5, duration: 0.6 }}
-                  >
-                    <span className="relative z-10">Voir le Stade 3D</span>
-                  </motion.button>
+
                 </motion.div>
 
-                {/* Composant 3D du stade */}
-                <AnimatePresence>
-                  {show3DStade && (
-                    <motion.div
-                      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => setShow3DStade(false)}
-                    >
-                      <motion.div
-                        className="w-full max-w-4xl h-[80vh]"
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.8, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <StadeViewer3D
-                          isFullscreen={isFullscreen3D}
-                          onToggleFullscreen={handleToggleFullscreen3D}
-                        />
-                      </motion.div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+
               </motion.div>
             ) : (
               <motion.div

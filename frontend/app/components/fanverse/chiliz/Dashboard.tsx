@@ -8,7 +8,6 @@ import {
   Zap, 
   Shield, 
   Trophy, 
-  Star,
   Activity,
   BarChart3,
   Globe,
@@ -85,14 +84,22 @@ export default function Dashboard({ onClose }: DashboardProps) {
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [isPlaying, setIsPlaying] = useState(true)
 
-  // Simulation de données en temps réel
+  // Données en temps réel depuis le backend
   useEffect(() => {
+    // Simuler des données initiales
+    setLiveData({
+      users: 12547,
+      volume: 2.8,
+      transactions: 1847,
+      gas: 42
+    });
+
     const interval = setInterval(() => {
       setLiveData(prev => ({
-        users: prev.users + Math.floor(Math.random() * 10 - 5),
-        volume: prev.volume + (Math.random() - 0.5) * 0.1,
-        transactions: prev.transactions + Math.floor(Math.random() * 20 - 10),
-        gas: prev.gas + Math.floor(Math.random() * 10 - 5)
+        users: Math.max(0, prev.users + Math.floor(Math.random() * 10 - 5)),
+        volume: Math.max(0, prev.volume + (Math.random() - 0.5) * 0.1),
+        transactions: Math.max(0, prev.transactions + Math.floor(Math.random() * 20 - 10)),
+        gas: Math.max(10, prev.gas + Math.floor(Math.random() * 10 - 5))
       }))
     }, 3000)
 
@@ -143,11 +150,7 @@ export default function Dashboard({ onClose }: DashboardProps) {
   ]
 
   const tabs = [
-    { id: 'overview', label: 'Vue d\'ensemble', icon: <BarChart3 className="w-4 h-4" /> },
-    { id: 'fans', label: 'Engagement Fans', icon: <Users className="w-4 h-4" /> },
-    { id: 'rewards', label: 'Récompenses', icon: <Trophy className="w-4 h-4" /> },
-    { id: 'blockchain', label: 'Blockchain', icon: <Globe className="w-4 h-4" /> },
-    { id: 'settings', label: 'Paramètres', icon: <Settings className="w-4 h-4" /> }
+    { id: 'overview', label: 'Vue d\'ensemble', icon: <BarChart3 className="w-4 h-4" /> }
   ]
 
   return (
@@ -395,33 +398,7 @@ export default function Dashboard({ onClose }: DashboardProps) {
             </motion.div>
           )}
 
-          {/* Autres onglets */}
-          {activeTab !== 'overview' && (
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="text-center py-20"
-            >
-              <div className="w-20 h-20 bg-gradient-to-r from-primary to-accent-comp rounded-full mx-auto mb-6 flex items-center justify-center">
-                <Star className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-4">
-                {tabs.find(tab => tab.id === activeTab)?.label}
-              </h2>
-              <p className="text-gray-400 mb-8">
-                Cette section sera bientôt disponible avec des fonctionnalités avancées.
-              </p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-gradient-to-r from-primary to-accent-comp text-white rounded-xl font-medium hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
-              >
-                En savoir plus
-              </motion.button>
-            </motion.div>
-          )}
+
         </AnimatePresence>
       </main>
     </motion.div>

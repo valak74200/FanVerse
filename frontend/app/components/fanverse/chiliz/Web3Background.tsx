@@ -334,39 +334,10 @@ export default function Web3Background() {
   }, [mousePosition])
 
   return (
-    <>
-      <canvas
-        ref={canvasRef}
-        className="fixed inset-0 pointer-events-none z-0"
-        style={{ mixBlendMode: "screen" }}
-      />
-      
-      {/* Overlay de données en temps réel */}
-      <div className="fixed top-4 left-4 z-10 space-y-2 pointer-events-none">
-        <motion.div
-          className="bg-black/20 backdrop-blur-sm border border-primary/30 rounded-lg p-3 text-xs font-mono text-primary"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span>Network Status: Active</span>
-          </div>
-          <div className="text-gray-400 mt-1">
-            Nodes: {nodesRef.current.length} | Streams: {dataStreamsRef.current.length}
-          </div>
-        </motion.div>
-        
-        <motion.div
-          className="bg-black/20 backdrop-blur-sm border border-accent-comp/30 rounded-lg p-3 text-xs font-mono text-accent-comp"
-          animate={{ opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 3, repeat: Infinity }}
-        >
-          <div>Latest Block: #847392</div>
-          <div>Gas Price: 21 gwei</div>
-          <div>TPS: 10,000</div>
-        </motion.div>
-      </div>
-    </>
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 pointer-events-none z-0"
+      style={{ mixBlendMode: "screen" }}
+    />
   )
 } 

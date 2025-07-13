@@ -1,0 +1,17 @@
+{
+  "name": "fanverse-contract",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.0.0",
+    "dotenv": "^17.2.0",
+    "hardhat": "^2.25.0"
+  }
+}
